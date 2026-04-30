@@ -1,0 +1,10 @@
+QPushButton {
+    text-align: left;
+    border: none;
+    padding : 10px;
+    background: transparent;
+}
+QPushButton[active="true"] {
+    background: #dfe9f8;
+}
+QPushButton:hover { background: #dfe9f8; }
