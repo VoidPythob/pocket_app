@@ -77,7 +77,7 @@ def load_qss(path: str, extra_vars: dict[str, object] | None = None) -> str:
 
 def load_json_resource(path: str) -> dict[str, object]:
     try:
-        with open(path, "r", encoding="utf-8") as file:
+        with open(path, "r", encoding="utf-8-sig") as file:
             data = json.load(file)
     except FileNotFoundError:
         logging.warning("json resource path does not exist: %s", path)
@@ -127,6 +127,7 @@ def _font_size_scale_for_locale() -> float:
 class Icons:
     _root = link_root("icons")
     back_arrow = path_join(_root, "back_arrow.svg")
+    nav_app_info = path_join(_root, "nav_dashboard.svg")
     nav_egg_groups = path_join(_root, "nav_egg_groups.svg")
     nav_features = path_join(_root, "nav_features.svg")
     nav_game_docs = path_join(_root, "nav_game_docs.svg")
@@ -143,9 +144,11 @@ class Icons:
 
 class Fonts:
     _root = link_root("fonts")
+    eva = path_join(_root, "eva.otf")
     genshin = path_join(_root, "genshin.ttf")
     hymmnos = path_join(_root, "hymmnos.ttf")
     jinwen = path_join(_root, "jinwen.ttf")
+    zaken_manus = path_join(_root, "zaken_manus.otf")
 
 
 class _Qss:
@@ -209,9 +212,7 @@ class _Qss:
         path = os.path.join(self._root, self._theme.value, "variables.json")
         raw = load_json_resource(path)
         self._variables = {
-            key: str(value)
-            for key, value in raw.items()
-            if value is not None
+            key: str(value) for key, value in raw.items() if value is not None
         }
 
     @staticmethod
@@ -352,13 +353,19 @@ def _resolve_default_font_family() -> str:
         return _default_font_family
 
     system_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.GeneralFont)
-    _default_font_family = _load_font_family("genshin", Fonts.genshin, system_font.family())
+    _default_font_family = _load_font_family(
+        "genshin", Fonts.genshin, system_font.family()
+    )
     return _default_font_family
 
 
 def font_family_for_locale(locale: _I18n.Locales | None = None) -> str:
     target_locale = locale or I18n.current_locale
     default_family = _resolve_default_font_family()
+    if target_locale == _I18n.Locales.EN_US:
+        return _load_font_family("zaken_manus", Fonts.zaken_manus, default_family)
+    if target_locale == _I18n.Locales.JA_JP:
+        return _load_font_family("eva", Fonts.eva, default_family)
     if target_locale == _I18n.Locales.EX_HY:
         return _load_font_family("hymmnos", Fonts.hymmnos, default_family)
     if target_locale == _I18n.Locales.LZH_CN:
@@ -378,6 +385,8 @@ def apply_locale_font(locale: _I18n.Locales | None = None) -> QFont:
 
 def preload_app_fonts() -> None:
     default_family = _resolve_default_font_family()
+    _load_font_family("eva", Fonts.eva, default_family)
+    _load_font_family("zaken_manus", Fonts.zaken_manus, default_family)
     _load_font_family("hymmnos", Fonts.hymmnos, default_family)
     _load_font_family("jinwen", Fonts.jinwen, default_family)
 

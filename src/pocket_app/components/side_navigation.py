@@ -237,7 +237,14 @@ class SideNavigation(QFrame):
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.scroll_area.setWidget(self._content_widget)
-        self._root_layout.addWidget(self.scroll_area)
+        self._root_layout.addWidget(self.scroll_area, 1)
+
+        self._bottom_widget = QWidget(self)
+        self.bottom_layout = QVBoxLayout(self._bottom_widget)
+        self.bottom_layout.setContentsMargins(0, 10, 0, 0)
+        self.bottom_layout.setSpacing(0)
+        self.bottom_layout.setAlignment(Qt.AlignmentFlag.AlignBottom)
+        self._root_layout.addWidget(self._bottom_widget)
 
         self.setStyleSheet(load_qss(Qss.s_side_navigation))
 
@@ -246,6 +253,8 @@ class SideNavigation(QFrame):
         item: SideNavigationItemModel,
         parent_item: SideNavigationItem | None = None,
         depth: int = 0,
+        *,
+        bottom: bool = False,
     ) -> SideNavigationItem:
         nav_item = SideNavigationItem(item, depth, self)
 
@@ -261,6 +270,8 @@ class SideNavigation(QFrame):
 
         if parent_item is not None:
             parent_item.add_child(nav_item)
+        elif bottom:
+            self.bottom_layout.addWidget(nav_item)
         else:
             self.main_layout.addWidget(nav_item)
 
@@ -274,11 +285,12 @@ class SideNavigation(QFrame):
 
     def clear_items(self) -> None:
         self._active_leaf_item = None
-        while self.main_layout.count():
-            item = self.main_layout.takeAt(0)
-            widget = item.widget()
-            if widget is not None:
-                widget.deleteLater()
+        for layout in (self.main_layout, self.bottom_layout):
+            while layout.count():
+                item = layout.takeAt(0)
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
 
     def _set_active_leaf_item(self, item: SideNavigationItem) -> None:
         if self._active_leaf_item is item:

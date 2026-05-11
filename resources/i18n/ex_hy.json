@@ -137,5 +137,12 @@
   "game_docs.path": "Path: {value}",
   "game_docs.views": "Views: {value}",
   "game_docs.category": "Category",
-  "game_docs.category_value": "Category {value}"
+  "game_docs.category_value": "Category {value}",
+  "nav.app_info": "App Info",
+  "page.app_info.title": "App Info",
+  "page.app_info.description": "enech chyet current app version yan basic info",
+  "page.app_info.search": "see app version",
+  "app_info.section": "Current Version",
+  "app_info.version": "Version",
+  "app_info.version_desc": "ya wea shows current packaged app version."
 }

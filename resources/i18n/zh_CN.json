@@ -1,4 +1,4 @@
-{
+﻿{
   "window.title": "Pocket App",
   "header.language_tooltip": "切换语言",
   "header.refresh_tooltip": "刷新当前页面",
@@ -137,5 +137,12 @@
   "game_docs.path": "路径: {value}",
   "game_docs.views": "浏览量: {value}",
   "game_docs.category": "分类",
-  "game_docs.category_value": "分类 {value}"
+  "game_docs.category_value": "分类 {value}",
+  "nav.app_info": "\u5e94\u7528\u4fe1\u606f",
+  "page.app_info.title": "\u5e94\u7528\u4fe1\u606f",
+  "page.app_info.description": "\u67e5\u770b\u5f53\u524d\u5e94\u7528\u7248\u672c\u4e0e\u57fa\u672c\u4fe1\u606f",
+  "page.app_info.search": "\u67e5\u770b\u5e94\u7528\u7248\u672c",
+  "app_info.section": "\u5f53\u524d\u7248\u672c",
+  "app_info.version": "\u7248\u672c",
+  "app_info.version_desc": "\u8fd9\u91cc\u663e\u793a\u5f53\u524d\u6253\u5305\u5e94\u7528\u7684\u7248\u672c\u53f7\u3002"
 }

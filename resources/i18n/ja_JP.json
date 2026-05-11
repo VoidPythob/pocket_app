@@ -1,4 +1,4 @@
-{
+﻿{
   "window.title": "Pocket App",
   "header.language_tooltip": "言語を切り替え",
   "header.refresh_tooltip": "現在のページを更新",
@@ -137,5 +137,12 @@
   "page.features.description": "ポケモンの特性を確認できます",
   "page.skills.description": "ポケモンのスキルを確認できます",
   "page.egg_groups.description": "タマゴグループと関連ポケモンを確認できます",
-  "page.game_docs.description": "分類ごとにゲーム資料を確認できます"
+  "page.game_docs.description": "分類ごとにゲーム資料を確認できます",
+  "nav.app_info": "\u30a2\u30d7\u30ea\u60c5\u5831",
+  "page.app_info.title": "\u30a2\u30d7\u30ea\u60c5\u5831",
+  "page.app_info.description": "\u73fe\u5728\u306e\u30a2\u30d7\u30ea\u30d0\u30fc\u30b8\u30e7\u30f3\u3068\u57fa\u672c\u60c5\u5831\u3092\u78ba\u8a8d\u3057\u307e\u3059",
+  "page.app_info.search": "\u30a2\u30d7\u30ea\u30d0\u30fc\u30b8\u30e7\u30f3\u3092\u8868\u793a",
+  "app_info.section": "\u73fe\u5728\u306e\u30d0\u30fc\u30b8\u30e7\u30f3",
+  "app_info.version": "\u30d0\u30fc\u30b8\u30e7\u30f3",
+  "app_info.version_desc": "\u73fe\u5728\u306e\u30d1\u30c3\u30b1\u30fc\u30b8\u7248\u30a2\u30d7\u30ea\u306e\u30d0\u30fc\u30b8\u30e7\u30f3\u3092\u8868\u793a\u3057\u307e\u3059\u3002"
 }

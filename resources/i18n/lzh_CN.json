@@ -64,5 +64,12 @@
   "game_docs.filter_title": "\u5206\u985e\u7be9\u9078",
   "game_docs.doc_default": "\u6587\u6a94",
   "game_docs.category": "\u5206\u985e",
-  "game_docs.category_value": "\u5206\u985e{value}"
+  "game_docs.category_value": "\u5206\u985e{value}",
+  "nav.app_info": "\u61c9\u7528\u4fe1\u606f",
+  "page.app_info.title": "\u61c9\u7528\u4fe1\u606f",
+  "page.app_info.description": "\u89bd\u73fe\u4e0b\u7248\u672c\u8207\u5176\u5927\u6982",
+  "page.app_info.search": "\u89bd\u5176\u7248\u672c",
+  "app_info.section": "\u73fe\u4e0b\u7248\u672c",
+  "app_info.version": "\u7248\u672c",
+  "app_info.version_desc": "\u6b64\u8655\u8f09\u73fe\u4e0b\u6253\u5305\u4e4b\u7248\u865f\u3002"
 }

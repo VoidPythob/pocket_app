@@ -20,6 +20,7 @@ from pocket_app import api
 from pocket_app.components import IconButton, LanguageSelector, SearchBar, SideNavigation, SideNavigationItemModel, Toaster
 from pocket_app.resources import I18n, I18nManager, Icons, Qss, ThemeManager, load_qss, preload_app_fonts, tr
 
+from .app_info_view import AppInfoView
 from .egg_groups_view import EggGroupsView
 from .features_view import FeaturesView
 from .game_docs_view import GameDocsView
@@ -32,6 +33,10 @@ PAGE_CONFIG = [
     ("features", "nav.features", Icons.nav_features),
     ("skills", "nav.skills", Icons.nav_skills),
     ("egg_groups", "nav.egg_groups", Icons.nav_egg_groups),
+]
+
+BOTTOM_PAGE_CONFIG = [
+    ("app_info", "nav.app_info", Icons.nav_app_info),
 ]
 
 
@@ -75,6 +80,7 @@ class MainWindowCentralWidget(QWidget):
             "items": ItemsView,
             "egg_groups": EggGroupsView,
             "game_docs": GameDocsView,
+            "app_info": AppInfoView,
         }
 
         ThemeManager.theme_changing.connect(self._prepare_theme_transition)
@@ -194,6 +200,19 @@ class MainWindowCentralWidget(QWidget):
 
         for model in models:
             item = self.side_navigation.add_item(model)
+            self._index_nav_items(item)
+
+        bottom_base_id = 1000
+        for offset, (name, label_key, icon_path) in enumerate(BOTTOM_PAGE_CONFIG, start=0):
+            item = self.side_navigation.add_item(
+                SideNavigationItemModel(
+                    id_=bottom_base_id + offset,
+                    name=name,
+                    tip=tr(label_key),
+                    icon=icon_path,
+                ),
+                bottom=True,
+            )
             self._index_nav_items(item)
 
         self._restore_active_route()
