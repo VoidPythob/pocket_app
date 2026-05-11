@@ -1,0 +1,44 @@
+PopupPanel,
+QFrame#popupPanel {
+    background: transparent;
+    border: none;
+}
+
+PopupPanel QWidget,
+QFrame#popupPanel QWidget {
+    background: transparent;
+    color: {{body_text_color}};
+}
+
+PopupPanel QLabel,
+QFrame#popupPanel QLabel {
+    background: transparent;
+    color: {{body_text_color}};
+    font-size: 13px;
+}
+
+PopupPanel QLabel#resourceTitle,
+QFrame#popupPanel QLabel#resourceTitle {
+    color: {{section_title_color}};
+    font-size: 16px;
+    font-weight: 700;
+}
+
+PopupPanel QLabel#metaText,
+QFrame#popupPanel QLabel#metaText {
+    color: {{body_text_color}};
+    font-size: 13px;
+}
+
+PopupPanel QLabel#popupTitle,
+QFrame#popupPanel QLabel#popupTitle {
+    color: {{section_title_color}};
+    font-size: 16px;
+    font-weight: 700;
+}
+
+PopupPanel QLabel#popupDescription,
+QFrame#popupPanel QLabel#popupDescription {
+    color: {{body_text_color}};
+    font-size: 13px;
+}

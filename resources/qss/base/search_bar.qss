@@ -1,0 +1,39 @@
+SearchBar {
+    background: {{search_bar_background}};
+    border: 1px solid {{search_bar_border}};
+    border-radius: {{border_radius}};
+}
+
+SearchBar[focused="true"] {
+    border-color: {{search_bar_focused_border}};
+    background: {{search_bar_focused_background}};
+}
+
+QLineEdit#searchInput {
+    border: none;
+    background: transparent;
+    color: {{search_bar_text_color}};
+    selection-background-color: {{search_bar_selection_background}};
+    font-size: 14px;
+    padding: 0;
+}
+
+QLineEdit#searchInput::placeholder {
+    color: {{search_bar_placeholder_color}};
+}
+
+QPushButton#searchButton {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+QPushButton#searchButton:hover {
+    background: {{search_bar_button_hover_background}};
+    border-radius: 12px;
+}
+
+QPushButton#searchButton:pressed {
+    background: {{search_bar_button_pressed_background}};
+    border-radius: 12px;
+}

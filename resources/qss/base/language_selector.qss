@@ -1,0 +1,38 @@
+QWidget#languageSelectorContent {
+    background: transparent;
+}
+
+QPushButton#languageOptionButton {
+    min-height: 34px;
+    padding: 0 12px;
+    text-align: center;
+    background: {{panel_background}};
+    color: {{body_text_color}};
+    border: 1px solid {{panel_border}};
+    border-radius: 0px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QPushButton#languageOptionButton:hover {
+    background: {{icon_button_hover_background}};
+    border-color: {{icon_button_hover_border}};
+    color: {{section_title_color}};
+}
+
+QPushButton#languageOptionButton:pressed {
+    background: {{icon_button_pressed_background}};
+    border-color: {{icon_button_pressed_border}};
+}
+
+QPushButton#languageOptionButton[selected="true"] {
+    background: {{side_nav_active_background}};
+    border-color: {{icon_button_hover_border}};
+    color: {{section_title_color}};
+}
+
+QPushButton#languageOptionButton:disabled {
+    background: {{icon_button_disabled_background}};
+    border-color: {{icon_button_disabled_border}};
+    color: {{header_description_color}};
+}

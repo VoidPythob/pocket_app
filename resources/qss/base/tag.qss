@@ -1,0 +1,35 @@
+Tag,
+QPushButton[selected="false"] {
+    background: {{background_color}};
+    color: {{text_color}};
+    border: 1px solid {{border_color}};
+    border-radius: {{border_radius}};
+    padding: 0 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+Tag:hover,
+QPushButton[selected="false"]:hover {
+    background: {{hover_background_color}};
+    border-color: {{hover_border_color}};
+}
+
+Tag:pressed,
+QPushButton[selected="false"]:pressed {
+    background: {{pressed_background_color}};
+    border-color: {{pressed_border_color}};
+}
+
+Tag[selected="true"],
+QPushButton[selected="true"] {
+    background: {{selected_background_color}};
+    color: {{selected_text_color}};
+    border: 1px solid {{selected_border_color}};
+    border-radius: {{border_radius}};
+    padding: 0 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+}

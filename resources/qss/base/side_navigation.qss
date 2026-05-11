@@ -1,0 +1,53 @@
+QFrame {
+    background: {{side_nav_background}};
+}
+
+QPushButton {
+    text-align: left;
+    border: none;
+    padding: 10px;
+    color: {{side_nav_text_color}};
+    background: transparent;
+}
+
+QPushButton[active="true"] {
+    background: {{side_nav_active_background}};
+    color: {{side_nav_active_text_color}};
+}
+
+QPushButton:hover {
+    background: {{side_nav_hover_background}};
+}
+
+QScrollArea {
+    border: none;
+    background: transparent;
+}
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 6px 2px 6px 0;
+}
+
+QScrollBar::handle:vertical {
+    background: {{scrollbar_handle_background}};
+    min-height: 28px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: {{scrollbar_handle_hover_background}};
+}
+
+QScrollBar::handle:vertical:pressed {
+    background: {{scrollbar_handle_pressed_background}};
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical,
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: transparent;
+    height: 0;
+}

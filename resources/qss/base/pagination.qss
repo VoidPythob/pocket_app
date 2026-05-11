@@ -1,0 +1,44 @@
+QFrame#paginationBar {
+    background: transparent;
+    border: none;
+}
+
+QPushButton#paginationPageButton {
+    background: {{panel_background}};
+    color: {{body_text_color}};
+    border: 1px solid {{panel_border}};
+    border-radius: 8px;
+    padding: 0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+QPushButton#paginationPageButton:hover {
+    background: {{icon_button_hover_background}};
+    border-color: {{icon_button_hover_border}};
+    color: {{section_title_color}};
+}
+
+QPushButton#paginationPageButton:pressed {
+    background: {{icon_button_pressed_background}};
+    border-color: {{icon_button_pressed_border}};
+}
+
+QPushButton#paginationPageButton[selected="true"] {
+    background: {{side_nav_active_background}};
+    color: {{section_title_color}};
+    border-color: {{icon_button_hover_border}};
+}
+
+QPushButton#paginationPageButton:disabled {
+    background: {{icon_button_disabled_background}};
+    color: {{header_description_color}};
+    border-color: {{icon_button_disabled_border}};
+}
+
+QLabel#paginationEllipsis,
+QLabel#paginationInfo {
+    background: transparent;
+    color: {{body_text_color}};
+    font-size: 13px;
+}

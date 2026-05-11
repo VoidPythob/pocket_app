@@ -8,6 +8,13 @@ description = "宝可梦数据展示前端"
 dynamic = ["version"]
 dependencies = ["PyQt6>=6.7,<7.0", "aiohttp>=3.13,<4.0"]
 
+[project.optional-dependencies]
+dev = ["pytest>=8.0,<9.0", "pyinstaller>=6.0,<7.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = ["test_*.py"]
+
 [tool.setuptools.dynamic]
 version = { attr = "pocket_app.__version__" }
 
@@ -15,3 +22,4 @@ version = { attr = "pocket_app.__version__" }
 python = "3.13.8"
 pyqt6 = "6.11.0"
 aiohttp = "3.13.5"
+argparse = "1.4.0"

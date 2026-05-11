@@ -1,0 +1,25 @@
+IconButton,
+QPushButton[variant="circle"] {
+    background: {{icon_button_background}};
+    border: 1px solid {{icon_button_border}};
+    border-radius: {{border_radius}};
+    padding: 0;
+}
+
+IconButton:hover,
+QPushButton[variant="circle"]:hover {
+    background: {{icon_button_hover_background}};
+    border-color: {{icon_button_hover_border}};
+}
+
+IconButton:pressed,
+QPushButton[variant="circle"]:pressed {
+    background: {{icon_button_pressed_background}};
+    border-color: {{icon_button_pressed_border}};
+}
+
+IconButton:disabled,
+QPushButton[variant="circle"]:disabled {
+    background: {{icon_button_disabled_background}};
+    border-color: {{icon_button_disabled_border}};
+}

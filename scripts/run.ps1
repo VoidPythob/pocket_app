@@ -1,0 +1,1 @@
+python -m pocket_app.main

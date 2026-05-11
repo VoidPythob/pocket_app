@@ -1,0 +1,30 @@
+QFrame#loadingPlaceholder {
+    background: {{loading_background}};
+    border: 1px solid {{loading_border}};
+    border-radius: 0px;
+}
+
+QLabel#loadingTitle {
+    color: {{loading_title_color}};
+    font-size: 20px;
+    font-weight: 700;
+}
+
+QLabel#loadingDesc {
+    color: {{loading_desc_color}};
+    font-size: 13px;
+}
+
+QPushButton#loadingRetryButton {
+    min-height: 34px;
+    padding: 0 18px;
+    border-radius: 10px;
+    border: none;
+    color: {{loading_button_text_color}};
+    background: {{loading_button_background}};
+    font-weight: 600;
+}
+
+QPushButton#loadingRetryButton:hover {
+    background: {{loading_button_hover_background}};
+}

@@ -1,0 +1,136 @@
+* {
+    font-size: 14px;
+    font-family: genshin;
+}
+
+QWidget {
+    background: {{app_background}};
+}
+
+QLabel {
+    background: transparent;
+}
+
+QFrame#mainHeader,
+QScrollArea#contentScrollArea,
+QWidget#contentScrollWidget,
+QFrame#pageCard,
+QFrame#introCard,
+QFrame#resourceCard,
+QFrame#metricCard,
+QFrame#petCard {
+    background: {{panel_background}};
+}
+
+QFrame#mainHeader,
+QFrame#resourceCard,
+QFrame#metricCard,
+QFrame#petCard {
+    border: 1px solid {{panel_border}};
+    border-radius: 18px;
+}
+
+QFrame#pageCard,
+QFrame#introCard {
+    border: 1px solid {{panel_border}};
+    border-radius: 0px;
+}
+
+QFrame#petCard {
+    border-color: {{pet_card_border}};
+}
+
+QFrame#cardCollectionPanel {
+    background: transparent;
+    border: none;
+}
+
+QWidget#petCardTagHost {
+    background: transparent;
+    border: none;
+}
+
+QFrame#mainHeader {
+    border-radius: 0px;
+}
+
+QLabel#headerTitle {
+    color: {{header_title_color}};
+    font-size: 28px;
+    font-weight: 700;
+}
+
+QLabel#headerDescription {
+    color: {{header_description_color}};
+    font-size: 14px;
+}
+
+QLabel#sectionTitle {
+    color: {{section_title_color}};
+    font-size: 18px;
+    font-weight: 700;
+}
+
+QLabel#resourceTitle {
+    color: {{section_title_color}};
+    font-size: 17px;
+    font-weight: 700;
+}
+
+QLabel#bodyText,
+QLabel#metaText,
+QLabel#metricTitle,
+QLabel#cardSubTitle {
+    color: {{body_text_color}};
+    font-size: 13px;
+}
+
+QLabel#metricValue {
+    color: {{section_title_color}};
+    font-size: 26px;
+    font-weight: 800;
+}
+
+QLabel#metaBadge {
+    color: {{meta_badge_text_color}};
+    background: {{meta_badge_background}};
+    border: 1px solid {{panel_border}};
+    border-radius: 10px;
+    padding: 4px 8px;
+}
+
+QScrollBar:vertical,
+QScrollArea#contentScrollArea QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 6px 2px 6px 0;
+}
+
+QScrollBar::handle:vertical,
+QScrollArea#contentScrollArea QScrollBar::handle:vertical {
+    background: {{scrollbar_handle_background}};
+    min-height: 28px;
+    border-radius: 5px;
+}
+
+QScrollBar::handle:vertical:hover,
+QScrollArea#contentScrollArea QScrollBar::handle:vertical:hover {
+    background: {{scrollbar_handle_hover_background}};
+}
+
+QScrollBar::handle:vertical:pressed,
+QScrollArea#contentScrollArea QScrollBar::handle:vertical:pressed {
+    background: {{scrollbar_handle_pressed_background}};
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical,
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical,
+QScrollArea#contentScrollArea QScrollBar::add-line:vertical,
+QScrollArea#contentScrollArea QScrollBar::sub-line:vertical,
+QScrollArea#contentScrollArea QScrollBar::add-page:vertical,
+QScrollArea#contentScrollArea QScrollBar::sub-page:vertical {
+    background: transparent;
+    height: 0;
+}

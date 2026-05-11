@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
-from pathlib import Path
 
 from PyQt6.QtGui import QFontMetrics, QIcon, QPaintEvent, QPainter, QTransform
 from PyQt6.QtWidgets import (
     QFrame,
     QPushButton,
+    QScrollArea,
     QStyle,
     QStyleOptionButton,
     QStylePainter,
@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 
-from pocket_app.resources import Icons, Qss, load_qss
+from pocket_app.resources import Icons, Qss, ThemeManager, load_qss
 
 
 @dataclass
@@ -23,6 +23,7 @@ class SideNavigationItemModel:
     tip: str
     children: list["SideNavigationItemModel"] = field(default_factory=list)
     icon: str = ""
+    expandable: bool = False
 
 
 class SideNavigationItemButton(QPushButton):
@@ -128,7 +129,7 @@ class SideNavigationItem(QWidget):
         self._model = model
         self._depth = depth
         self._children: list[SideNavigationItem] = []
-        self._is_folded = False
+        self._is_folded = bool(model.children) or model.expandable
         self._selected = False
         self._setup_ui()
 
@@ -142,16 +143,17 @@ class SideNavigationItem(QWidget):
         )
         if self._model.icon:
             self.button.set_left_icon(self._model.icon)
-        self.button.set_fold_icon_visible(bool(self._model.children))
+        self.button.set_fold_icon_visible(bool(self._model.children) or self._model.expandable)
         self.button.set_folded(self._is_folded)
         self._refresh_active_state()
         self.main_layout.addWidget(self.button)
 
-        if self._model.children:
+        if self._model.children or self._model.expandable:
             self.button.clicked.connect(self.toggle_fold)
 
     def add_child(self, child_widget: "SideNavigationItem") -> None:
         self._children.append(child_widget)
+        child_widget.setVisible(not self._is_folded)
         self.main_layout.addWidget(child_widget)
 
     def toggle_fold(self) -> None:
@@ -189,8 +191,8 @@ class SideNavigationItem(QWidget):
         self._refresh_active_state()
 
     def _refresh_active_state(self) -> None:
-        if self._model.children:
-            self._set_button_active(not self._is_folded)
+        if self._model.children or self._model.expandable:
+            self._set_button_active(False)
             return
 
         self._set_button_active(self._selected)
@@ -210,13 +212,32 @@ class SideNavigation(QFrame):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._active_leaf_item: SideNavigationItem | None = None
+        ThemeManager.theme_changed.connect(self._on_theme_changed)
         self._setup_ui()
 
     def _setup_ui(self) -> None:
-        self.main_layout = QVBoxLayout(self)
+        self._root_layout = QVBoxLayout(self)
+        self._root_layout.setContentsMargins(0, 0, 0, 0)
+        self._root_layout.setSpacing(0)
+
+        self.scroll_area = QScrollArea(self)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+
+        self._content_widget = QWidget(self.scroll_area)
+        self.main_layout = QVBoxLayout(self._content_widget)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.scroll_area.setWidget(self._content_widget)
+        self._root_layout.addWidget(self.scroll_area)
 
         self.setStyleSheet(load_qss(Qss.s_side_navigation))
 
@@ -225,10 +246,10 @@ class SideNavigation(QFrame):
         item: SideNavigationItemModel,
         parent_item: SideNavigationItem | None = None,
         depth: int = 0,
-    ) -> None:
+    ) -> SideNavigationItem:
         nav_item = SideNavigationItem(item, depth, self)
 
-        if not item.children:
+        if not item.children and not item.expandable:
             nav_item.button.clicked.connect(
                 lambda clicked=False, current_item=nav_item: self._set_active_leaf_item(
                     current_item
@@ -246,8 +267,18 @@ class SideNavigation(QFrame):
         for child in item.children:
             self.add_item(child, nav_item, depth + 1)
 
+        return nav_item
+
     def add_item_by_json(self, json: str) -> None:
         pass
+
+    def clear_items(self) -> None:
+        self._active_leaf_item = None
+        while self.main_layout.count():
+            item = self.main_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
 
     def _set_active_leaf_item(self, item: SideNavigationItem) -> None:
         if self._active_leaf_item is item:
@@ -259,3 +290,6 @@ class SideNavigation(QFrame):
 
         self._active_leaf_item = item
         self._active_leaf_item.set_active(True)
+
+    def _on_theme_changed(self, _theme: str) -> None:
+        self.setStyleSheet(load_qss(Qss.s_side_navigation))
