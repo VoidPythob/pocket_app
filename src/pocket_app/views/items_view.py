@@ -15,7 +15,6 @@ from .view_helpers import (
     first_text,
     make_body_text,
     make_meta_text,
-    make_section_title,
 )
 
 
@@ -72,20 +71,6 @@ class ItemsView(BasePageView):
         rows = extract_list(data)
         self._update_paging(data, len(rows))
 
-        intro_panel, intro_layout = self.build_panel("introCard")
-        intro_layout.addWidget(make_section_title(tr("items.intro_title"), intro_panel))
-        intro_layout.addWidget(
-            make_body_text(
-                tr("items.intro_desc"),
-                intro_panel,
-            )
-        )
-        self.content_layout.addWidget(intro_panel)
-
-        hint_panel, hint_layout = self.build_panel("pageCard", spacing=8)
-        hint_layout.addWidget(make_meta_text(tr("items.loaded", count=len(rows)), hint_panel))
-        self.content_layout.addWidget(hint_panel)
-
         cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
         for index, row in enumerate(rows):
             item_id = row.get("id")
@@ -111,6 +96,7 @@ class ItemsView(BasePageView):
 
             cards_layout.addWidget(card, index // 3, index % 3)
         self.content_layout.addWidget(cards_panel)
+        self.content_layout.addStretch(1)
         add_pagination(
             self.content_layout,
             self.content_widget,
@@ -118,7 +104,6 @@ class ItemsView(BasePageView):
             total_pages=self._total_pages,
             on_page_changed=self._set_page,
         )
-        self.content_layout.addStretch(1)
 
     def _update_paging(self, data, page_size: int) -> None:
         total_count = extract_count(data)

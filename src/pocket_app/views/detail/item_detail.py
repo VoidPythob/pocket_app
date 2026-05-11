@@ -22,9 +22,11 @@ def render_item_detail(
     view.content_layout.addWidget(name_panel)
 
     description_panel, description_layout = view.build_panel("pageCard")
-    description_layout.addWidget(
-        make_body_text(first_text(detail, "detail", default="-"), description_panel)
-    )
+    introduction = first_text(detail, "introduction", default="-")
+    detail_text = first_text(detail, "detail", default="")
+    description_layout.addWidget(make_body_text(introduction, description_panel))
+    if detail_text and detail_text != introduction:
+        description_layout.addWidget(make_meta_text(detail_text, description_panel))
     view.content_layout.addWidget(description_panel)
 
     view.content_layout.addStretch(1)

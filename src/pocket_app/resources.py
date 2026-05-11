@@ -10,6 +10,7 @@ import re
 
 from PyQt6.QtCore import QObject, pyqtSignal
 from PyQt6.QtGui import QFont, QFontDatabase
+from PyQt6.QtWidgets import QApplication
 
 from pocket_app.utils import str_isempty
 
@@ -30,7 +31,10 @@ def link_root(root: str) -> str:
 
 QSS_VAR_PATTERN = re.compile(r"\{\{([a-z0-9_]+)\}\}")
 QSS_FONT_FAMILY_PATTERN = re.compile(r"(font-family\s*:\s*)([a-zA-Z0-9_\-]+)(\s*;)")
+QSS_FONT_SIZE_PATTERN = re.compile(r"(font-size\s*:\s*)(\d+(?:\.\d+)?)(px\s*;)")
 _font_aliases: dict[str, str] = {}
+_loaded_font_families: dict[str, str] = {}
+_default_font_family = ""
 
 
 def load_qss(path: str, extra_vars: dict[str, object] | None = None) -> str:
@@ -49,7 +53,8 @@ def load_qss(path: str, extra_vars: dict[str, object] | None = None) -> str:
         lambda match: variables.get(match.group(1), match.group(0)),
         raw,
     )
-    return QSS_FONT_FAMILY_PATTERN.sub(_replace_font_alias, resolved)
+    resolved = QSS_FONT_FAMILY_PATTERN.sub(_replace_font_alias, resolved)
+    return QSS_FONT_SIZE_PATTERN.sub(_replace_font_size, resolved)
 
 
 def load_json_resource(path: str) -> dict[str, object]:
@@ -85,6 +90,22 @@ def _replace_font_alias(match: re.Match[str]) -> str:
     return f'{match.group(1)}"{family_name}"{match.group(3)}'
 
 
+def _replace_font_size(match: re.Match[str]) -> str:
+    scale = _font_size_scale_for_locale()
+    if scale == 1.0:
+        return match.group(0)
+    size = float(match.group(2))
+    scaled_size = max(1, round(size * scale))
+    return f"{match.group(1)}{scaled_size}{match.group(3)}"
+
+
+def _font_size_scale_for_locale() -> float:
+    current_locale = getattr(globals().get("I18n"), "current_locale", None)
+    if current_locale in (_I18n.Locales.EX_HY, _I18n.Locales.LZH_CN):
+        return 1.14
+    return 1.0
+
+
 class Icons:
     _root = link_root("icons")
     back_arrow = path_join(_root, "back_arrow.svg")
@@ -105,6 +126,8 @@ class Icons:
 class Fonts:
     _root = link_root("fonts")
     genshin = path_join(_root, "genshin.ttf")
+    hymmnos = path_join(_root, "hymmnos.ttf")
+    jinwen = path_join(_root, "jinwen.ttf")
 
 
 class _Qss:
@@ -188,6 +211,8 @@ class _I18n:
         ZH_CN = "zh_CN"
         EN_US = "en_US"
         JA_JP = "ja_JP"
+        LZH_CN = "lzh_CN"
+        EX_HY = "ex_hy"
 
     def __init__(self) -> None:
         self._locale = self.Locales.ZH_CN
@@ -258,8 +283,11 @@ class _I18nManager(QObject):
     def set_locale(self, locale: _I18n.Locales) -> None:
         if I18n.current_locale == locale:
             return
+        font_family_for_locale(locale)
+        apply_locale_font(locale)
         I18n.set_locale(locale)
         self.language_changed.emit(locale.value)
+        ThemeManager.theme_changed.emit(ThemeManager.current_theme.value)
 
     def toggle_locale(self) -> _I18n.Locales:
         locales = self.available_locales()
@@ -282,17 +310,59 @@ def tr(key: str, **kwargs: object) -> str:
     return I18nManager.text(key, **kwargs)
 
 
-def load_app_font() -> QFont:
-    system_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.GeneralFont)
-    family_name = system_font.family()
+def _load_font_family(cache_key: str, path: str, fallback_family: str) -> str:
+    family_name = _loaded_font_families.get(cache_key, "")
+    if family_name:
+        return family_name
 
-    font_id = QFontDatabase.addApplicationFont(Fonts.genshin)
+    font_id = QFontDatabase.addApplicationFont(path)
     if font_id < 0:
-        logging.warning("failed to load font resource: %s", Fonts.genshin)
+        logging.warning("failed to load font resource: %s", path)
+        family_name = fallback_family
     else:
         families = QFontDatabase.applicationFontFamilies(font_id)
-        if families:
-            family_name = families[0]
+        family_name = families[0] if families else fallback_family
 
+    _loaded_font_families[cache_key] = family_name
+    register_font_alias(cache_key, family_name)
+    return family_name
+
+
+def _resolve_default_font_family() -> str:
+    global _default_font_family
+    if _default_font_family:
+        return _default_font_family
+
+    system_font = QFontDatabase.systemFont(QFontDatabase.SystemFont.GeneralFont)
+    _default_font_family = _load_font_family("genshin", Fonts.genshin, system_font.family())
+    return _default_font_family
+
+
+def font_family_for_locale(locale: _I18n.Locales | None = None) -> str:
+    target_locale = locale or I18n.current_locale
+    default_family = _resolve_default_font_family()
+    if target_locale == _I18n.Locales.EX_HY:
+        return _load_font_family("hymmnos", Fonts.hymmnos, default_family)
+    if target_locale == _I18n.Locales.LZH_CN:
+        return _load_font_family("jinwen", Fonts.jinwen, default_family)
+    return default_family
+
+
+def apply_locale_font(locale: _I18n.Locales | None = None) -> QFont:
+    family_name = font_family_for_locale(locale)
     register_font_alias("genshin", family_name)
-    return QFont(family_name)
+    app = QApplication.instance()
+    font = QFont(family_name)
+    if app is not None:
+        app.setFont(font)
+    return font
+
+
+def preload_app_fonts() -> None:
+    default_family = _resolve_default_font_family()
+    _load_font_family("hymmnos", Fonts.hymmnos, default_family)
+    _load_font_family("jinwen", Fonts.jinwen, default_family)
+
+
+def load_app_font() -> QFont:
+    return apply_locale_font(I18n.current_locale)

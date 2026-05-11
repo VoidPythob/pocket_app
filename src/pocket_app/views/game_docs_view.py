@@ -16,9 +16,7 @@ from .view_helpers import (
     extract_count,
     extract_list,
     first_text,
-    make_body_text,
     make_meta_text,
-    make_section_title,
 )
 
 
@@ -78,28 +76,6 @@ class GameDocsView(BasePageView):
         filtered_rows = self._filter_rows(rows)
         self._update_paging(data, len(rows))
 
-        intro_panel, intro_layout = self.build_panel("introCard")
-        intro_layout.addWidget(make_section_title(tr("game_docs.intro_title"), intro_panel))
-        intro_layout.addWidget(make_body_text(tr("game_docs.intro_desc"), intro_panel))
-        self.content_layout.addWidget(intro_panel)
-
-        hint_panel, hint_layout = self.build_panel("pageCard", spacing=8)
-        hint_layout.addWidget(
-            make_meta_text(
-                tr("game_docs.category_hint", category=self._group_label or tr("common.all")),
-                hint_panel,
-            )
-        )
-        hint_layout.addWidget(make_meta_text(tr("game_docs.loaded", count=len(filtered_rows)), hint_panel))
-        if not self.search_text and self._total_pages > 1:
-            hint_layout.addWidget(
-                make_meta_text(
-                    tr("skills.page_hint", page=self._current_page, total=self._total_pages),
-                    hint_panel,
-                )
-            )
-        self.content_layout.addWidget(hint_panel)
-
         cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
         for index, row in enumerate(filtered_rows):
             doc_id = row.get("id")
@@ -110,9 +86,9 @@ class GameDocsView(BasePageView):
             title = QLabel(first_text(row, "name", default=tr("game_docs.doc_default")), card)
             title.setObjectName("resourceTitle")
             layout.addWidget(title)
-            layout.addWidget(make_meta_text(tr("common.id", value=row.get("id", "-")), card))
             cards_layout.addWidget(card, index // 3, index % 3)
         self.content_layout.addWidget(cards_panel)
+        self.content_layout.addStretch(1)
         add_pagination(
             self.content_layout,
             self.content_widget,
@@ -120,8 +96,6 @@ class GameDocsView(BasePageView):
             total_pages=self._total_pages,
             on_page_changed=self._set_page,
         )
-
-        self.content_layout.addStretch(1)
 
     async def _fetch_all_docs_for_search(self) -> list[dict[str, Any]]:
         first_page = await api.list_game_docs(group_id=self._group_id, page=1)

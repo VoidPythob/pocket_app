@@ -3,11 +3,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from PyQt6.QtWidgets import QLabel
-
 from pocket_app.resources import tr
 
-from ..view_helpers import BasePageView, first_text, make_body_text
+from ..view_helpers import BasePageView, first_text, make_body_text, make_meta_text
 from .common import add_detail_header
 
 
@@ -19,12 +17,21 @@ def render_skill_detail(
     title = first_text(detail, "name", "introduction", default=tr("skills.fallback"))
     add_detail_header(view, title, "", on_back)
 
-    summary_panel, summary_layout = view.build_panel("pageCard")
-    title_label = QLabel(f"{title} | ID: {detail.get('id', '-')}", summary_panel)
-    title_label.setObjectName("resourceTitle")
-    summary_layout.addWidget(title_label)
-    summary_layout.addWidget(
-        make_body_text(first_text(detail, "detail", default="-"), summary_panel)
-    )
-    view.content_layout.addWidget(summary_panel)
+    name_panel, name_layout = view.build_panel("pageCard")
+    name_layout.addWidget(make_meta_text(f"ID: {detail.get('id', '-')}", name_panel))
+    jp_name = first_text(detail, "jp_name", default="")
+    en_name = first_text(detail, "en_name", default="")
+    if jp_name:
+        name_layout.addWidget(make_meta_text(f"JP: {jp_name}", name_panel))
+    if en_name:
+        name_layout.addWidget(make_meta_text(f"EN: {en_name}", name_panel))
+    view.content_layout.addWidget(name_panel)
+
+    description_panel, description_layout = view.build_panel("pageCard")
+    introduction = first_text(detail, "introduction", default="-")
+    detail_text = first_text(detail, "detail", default="")
+    description_layout.addWidget(make_body_text(introduction, description_panel))
+    if detail_text and detail_text != introduction:
+        description_layout.addWidget(make_meta_text(detail_text, description_panel))
+    view.content_layout.addWidget(description_panel)
     view.content_layout.addStretch(1)

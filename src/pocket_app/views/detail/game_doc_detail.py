@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QLabel
 
 from pocket_app.resources import tr
 
-from ..view_helpers import BasePageView, first_text, make_meta_text
+from ..view_helpers import BasePageView, first_text
 from .common import add_detail_header
 
 
@@ -20,10 +20,6 @@ def render_game_doc_detail(
 ) -> None:
     title = first_text(detail, "name", default=tr("game_docs.doc_default"))
     add_detail_header(view, title, "", on_back)
-
-    summary_panel, summary_layout = view.build_panel("pageCard")
-    summary_layout.addWidget(make_meta_text(tr("common.id", value=detail.get("id", "-")), summary_panel))
-    view.content_layout.addWidget(summary_panel)
 
     content_panel, content_layout = view.build_panel("pageCard")
     content = first_text(detail, "content", "detail", "body", default="-")

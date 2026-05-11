@@ -18,8 +18,6 @@ from .view_helpers import (
     extract_count,
     extract_list,
     first_text,
-    make_body_text,
-    make_meta_text,
     make_section_title,
 )
 
@@ -95,33 +93,10 @@ class PetsView(BasePageView):
         pets = extract_list(pets_payload)
         self._update_paging(pets_payload, len(pets))
 
-        intro_panel, intro_layout = self.build_panel("introCard")
-        intro_layout.addWidget(make_section_title(tr("pets.intro_title"), intro_panel))
-        intro_layout.addWidget(
-            make_body_text(
-                tr("pets.intro_desc"),
-                intro_panel,
-            )
-        )
-        self.content_layout.addWidget(intro_panel)
-
         filter_panel, filter_layout = self.build_panel("pageCard")
         filter_layout.addWidget(make_section_title(tr("common.filters"), filter_panel))
         self._add_feature_row(filter_layout, filter_panel, features)
         self.content_layout.addWidget(filter_panel)
-
-        hint_panel, hint_layout = self.build_panel("pageCard", spacing=8)
-        hint_layout.addWidget(
-            make_meta_text(
-                tr(
-                    "pets.hint",
-                    count=len(pets),
-                    generation=self._generation_label or self._generation_id or "-",
-                ),
-                hint_panel,
-            )
-        )
-        self.content_layout.addWidget(hint_panel)
 
         cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
         for column in range(3):
@@ -129,6 +104,7 @@ class PetsView(BasePageView):
         for index, pet in enumerate(pets):
             cards_layout.addWidget(self._build_pet_card(pet), index // 3, index % 3)
         self.content_layout.addWidget(cards_panel)
+        self.content_layout.addStretch(1)
         add_pagination(
             self.content_layout,
             self.content_widget,
@@ -136,7 +112,6 @@ class PetsView(BasePageView):
             total_pages=self._total_pages,
             on_page_changed=self._set_page,
         )
-        self.content_layout.addStretch(1)
 
     def _add_feature_row(
         self,

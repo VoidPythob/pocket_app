@@ -7,8 +7,6 @@ from PyQt6.QtWidgets import QWidget
 
 from pocket_app import api
 from pocket_app.components import PetCard
-from pocket_app.resources import tr
-
 from .detail import render_egg_group_detail, render_pet_detail
 from .view_helpers import (
     BasePageView,
@@ -16,10 +14,6 @@ from .view_helpers import (
     clear_layout,
     extract_count,
     extract_list,
-    first_text,
-    make_body_text,
-    make_meta_text,
-    make_section_title,
 )
 
 
@@ -88,34 +82,9 @@ class EggGroupsView(BasePageView):
             render_egg_group_detail(self, data if isinstance(data, dict) else {}, self._close_detail)
             return
 
-        detail = data["detail"] if isinstance(data.get("detail"), dict) else {}
         pets_payload = data["pets"]
         selected_pets = extract_list(pets_payload)
         self._update_paging(pets_payload, len(selected_pets), bool(data.get("search_mode")))
-
-        intro_panel, intro_layout = self.build_panel("introCard")
-        intro_layout.addWidget(make_section_title(tr("egg_groups.intro_title"), intro_panel))
-        intro_layout.addWidget(
-            make_body_text(
-                tr("egg_groups.intro_desc"),
-                intro_panel,
-            )
-        )
-        self.content_layout.addWidget(intro_panel)
-
-        hint_panel, hint_layout = self.build_panel("pageCard", spacing=8)
-        group_name = first_text(
-            detail,
-            "name",
-            default=self._group_label or tr("egg_groups.group_value", value=self._group_id or "-"),
-        )
-        hint_text = tr(
-            "egg_groups.loaded_pets",
-            count=len(selected_pets),
-            group_id=group_name,
-        )
-        hint_layout.addWidget(make_meta_text(hint_text, hint_panel))
-        self.content_layout.addWidget(hint_panel)
 
         cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
         filtered_rows = [
@@ -126,6 +95,7 @@ class EggGroupsView(BasePageView):
         for index, row in enumerate(filtered_rows):
             cards_layout.addWidget(self._build_pet_card(row), index // 3, index % 3)
         self.content_layout.addWidget(cards_panel)
+        self.content_layout.addStretch(1)
         add_pagination(
             self.content_layout,
             self.content_widget,
@@ -133,7 +103,6 @@ class EggGroupsView(BasePageView):
             total_pages=self._total_pages,
             on_page_changed=self._set_page,
         )
-        self.content_layout.addStretch(1)
 
     async def _fetch_all_group_pets_for_search(self) -> dict[str, Any]:
         first_page = await api.list_egg_group_pets(self._group_id, page=1)

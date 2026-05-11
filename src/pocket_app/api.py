@@ -285,6 +285,28 @@ async def _return_async(value: Any) -> Any:
     return value
 
 
+def _extract_collection(value: Any, *container_keys: str) -> Any:
+    if isinstance(value, list):
+        return value
+    if not isinstance(value, dict):
+        return value
+
+    for key in container_keys:
+        nested = value.get(key)
+        if isinstance(nested, list):
+            return nested
+        if isinstance(nested, dict):
+            extracted = _extract_collection(nested)
+            if isinstance(extracted, list):
+                return extracted
+
+    for key in ("results", "items", "list", "rows", "records"):
+        nested = value.get(key)
+        if isinstance(nested, list):
+            return nested
+    return value
+
+
 async def admin_login(email: str, password: str) -> Any:
     return await _post(
         "/admin/login/",
@@ -330,21 +352,21 @@ async def get_pet_detail_payload(pet_id: int) -> dict[str, Any]:
     if not isinstance(detail, dict):
         return {"detail": {}, "features": [], "capture_methods": []}
 
-    features = detail.get("features")
-    capture_methods = detail.get("capture_methods")
+    features = _extract_collection(detail.get("features"), "features")
+    capture_methods = _extract_collection(detail.get("capture_methods"), "capture_methods")
     need_features = features is None
     need_capture_methods = capture_methods is None
 
     if need_features or need_capture_methods:
         fallback_results = await asyncio.gather(
-            list_pet_features(pet_id) if need_features else _return_async(features),
-            list_pet_capture_methods(pet_id) if need_capture_methods else _return_async(capture_methods),
+            list_pet_features(pet_id, page=1) if need_features else _return_async(features),
+            list_pet_capture_methods(pet_id, page=1) if need_capture_methods else _return_async(capture_methods),
             return_exceptions=True,
         )
         if need_features and not isinstance(fallback_results[0], Exception):
-            features = fallback_results[0]
+            features = _extract_collection(fallback_results[0], "features")
         if need_capture_methods and not isinstance(fallback_results[1], Exception):
-            capture_methods = fallback_results[1]
+            capture_methods = _extract_collection(fallback_results[1], "capture_methods")
 
     return {
         "detail": detail,
@@ -353,12 +375,12 @@ async def get_pet_detail_payload(pet_id: int) -> dict[str, Any]:
     }
 
 
-async def list_pet_features(pet_id: int) -> Any:
-    return await _get(f"/pets/{pet_id}/features/")
+async def list_pet_features(pet_id: int, page: int | None = None) -> Any:
+    return await _get(f"/pets/{pet_id}/features/", params={"page": page})
 
 
-async def list_pet_capture_methods(pet_id: int) -> Any:
-    return await _get(f"/pets/{pet_id}/capture_methods/")
+async def list_pet_capture_methods(pet_id: int, page: int | None = None) -> Any:
+    return await _get(f"/pets/{pet_id}/capture_methods/", params={"page": page})
 
 
 async def get_capture_method_detail(capture_method_id: int) -> Any:
@@ -373,8 +395,8 @@ async def get_feature_detail(feature_id: int) -> Any:
     return await _get(f"/features/{feature_id}/")
 
 
-async def list_skills(page: int | None = None) -> Any:
-    return await _get("/skills/", params={"page": page})
+async def list_skills(name: str = "", page: int | None = None) -> Any:
+    return await _get("/skills/", params={"name": name, "page": page})
 
 
 async def get_skill_detail(skill_id: int) -> Any:
@@ -429,6 +451,10 @@ async def get_game_doc_detail(game_doc_id: int) -> Any:
 
 async def list_game_doc_categories() -> Any:
     return await _get("/game-doc-categories/")
+
+
+def get_file_url(file_id: str) -> str:
+    return f"{get_base_url()}/files/{str(file_id).strip().strip('/')}/"
 
 
 async def create_admin_pet(

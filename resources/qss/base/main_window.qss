@@ -99,6 +99,35 @@ QLabel#metaBadge {
     padding: 4px 8px;
 }
 
+QMenu {
+    background: {{panel_background}};
+    color: {{section_title_color}};
+    border: 1px solid {{panel_border}};
+    padding: 6px 0;
+}
+
+QMenu::item {
+    background: transparent;
+    color: {{section_title_color}};
+    padding: 8px 18px;
+    margin: 0 6px;
+}
+
+QMenu::item:selected {
+    background: {{icon_button_hover_background}};
+    color: {{section_title_color}};
+}
+
+QMenu::item:disabled {
+    color: {{header_description_color}};
+}
+
+QMenu::separator {
+    height: 1px;
+    background: {{panel_border}};
+    margin: 6px 12px;
+}
+
 QScrollBar:vertical,
 QScrollArea#contentScrollArea QScrollBar:vertical {
     background: transparent;

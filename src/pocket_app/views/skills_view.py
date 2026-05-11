@@ -15,7 +15,6 @@ from .view_helpers import (
     first_text,
     make_body_text,
     make_meta_text,
-    make_section_title,
 )
 
 
@@ -40,7 +39,7 @@ class SkillsView(BasePageView):
     async def fetch_data(self):
         if self._selected_skill_id is not None:
             return await api.get_skill_detail(self._selected_skill_id)
-        return await api.list_skills(page=self._current_page)
+        return await api.list_skills(name=self._search_text, page=self._current_page)
 
     def render_data(self, data) -> None:
         clear_layout(self.content_layout)
@@ -49,26 +48,10 @@ class SkillsView(BasePageView):
             return
 
         rows = extract_list(data)
-        filtered_rows = self._filter_rows(rows)
         self._update_paging(data, len(rows))
 
-        intro_panel, intro_layout = self.build_panel("introCard")
-        intro_layout.addWidget(make_section_title(tr("skills.intro_title"), intro_panel))
-        intro_layout.addWidget(
-            make_body_text(
-                tr("skills.intro_desc"),
-                intro_panel,
-            )
-        )
-        self.content_layout.addWidget(intro_panel)
-
-        hint_panel, hint_layout = self.build_panel("pageCard", spacing=8)
-        hint_layout.addWidget(make_meta_text(tr("skills.loaded", count=len(filtered_rows)), hint_panel))
-        hint_layout.addWidget(make_meta_text(tr("skills.page_hint", page=self._current_page, total=self._total_pages), hint_panel))
-        self.content_layout.addWidget(hint_panel)
-
         cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
-        for index, row in enumerate(filtered_rows):
+        for index, row in enumerate(rows):
             skill_id = row.get("id")
             card, layout = build_clickable_panel(
                 self,
@@ -77,10 +60,23 @@ class SkillsView(BasePageView):
             title = QLabel(first_text(row, "name", "introduction", default=tr("skills.fallback")), card)
             title.setObjectName("resourceTitle")
             layout.addWidget(title)
+            skill_meta_parts = [f"ID: {skill_id if skill_id is not None else '-'}"]
+            jp_name = first_text(row, "jp_name", default="")
+            en_name = first_text(row, "en_name", default="")
+            if jp_name or en_name:
+                skill_meta_parts.append(
+                    tr(
+                        "items.card.meta",
+                        jp_name=jp_name or "-",
+                        en_name=en_name or "-",
+                    )
+                )
+            layout.addWidget(make_meta_text("  |  ".join(skill_meta_parts), card))
             layout.addWidget(make_body_text(first_text(row, "introduction"), card))
             layout.addWidget(make_meta_text(first_text(row, "detail"), card))
             cards_layout.addWidget(card, index // 3, index % 3)
         self.content_layout.addWidget(cards_panel)
+        self.content_layout.addStretch(1)
         add_pagination(
             self.content_layout,
             self.content_widget,
@@ -88,14 +84,6 @@ class SkillsView(BasePageView):
             total_pages=self._total_pages,
             on_page_changed=self._set_page,
         )
-
-        self.content_layout.addStretch(1)
-
-    def _filter_rows(self, rows: list[dict]) -> list[dict]:
-        if not self.search_text:
-            return rows
-        keyword = self.search_text.lower()
-        return [row for row in rows if keyword in str(row).lower()]
 
     def _update_paging(self, data, page_size: int) -> None:
         total_count = extract_count(data)

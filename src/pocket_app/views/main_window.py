@@ -18,7 +18,7 @@ from PyQt6.QtWidgets import (
 
 from pocket_app import api
 from pocket_app.components import IconButton, LanguageSelector, SearchBar, SideNavigation, SideNavigationItemModel, Toaster
-from pocket_app.resources import I18n, I18nManager, Icons, Qss, ThemeManager, load_qss, tr
+from pocket_app.resources import I18n, I18nManager, Icons, Qss, ThemeManager, load_qss, preload_app_fonts, tr
 
 from .egg_groups_view import EggGroupsView
 from .features_view import FeaturesView
@@ -434,7 +434,7 @@ class MainWindowCentralWidget(QWidget):
         )
 
     def _handle_game_doc_routes_loaded(self, data) -> None:
-        rows = extract_list(data, "categories", "groups", "items")
+        rows = extract_list(data, "categories", "groups")
         self._game_doc_routes = []
         seen_ids: set[int] = set()
         for row in rows:
@@ -449,6 +449,9 @@ class MainWindowCentralWidget(QWidget):
                         source = nested
                         game_doc_id = nested.get("id")
                         break
+            parent_id = source.get("p_id")
+            if parent_id not in (None, "", 0):
+                continue
             if not isinstance(game_doc_id, int) or game_doc_id in seen_ids:
                 continue
             seen_ids.add(game_doc_id)
@@ -699,7 +702,6 @@ class MainWindowCentralWidget(QWidget):
 
         for page in self._pages.values():
             page.rerender_last()
-        self._apply_tooltips()
 
     def resizeEvent(self, event) -> None:  # type: ignore[override]
         super().resizeEvent(event)
@@ -710,6 +712,7 @@ class MainWindowCentralWidget(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
+        preload_app_fonts()
         self.setWindowTitle(tr("window.title"))
         self.setWindowIcon(QIcon(Icons.nav_pets))
         self.setCentralWidget(MainWindowCentralWidget())

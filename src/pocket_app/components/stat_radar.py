@@ -99,8 +99,8 @@ class StatRadar(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
 
-        rect = self.rect().adjusted(16, 16, -16, -16)
-        chart_rect = rect.adjusted(48, 36, -48, -50)
+        rect = self.rect().adjusted(14, 20, -14, -14)
+        chart_rect = rect.adjusted(34, 34, -34, -42)
         if chart_rect.width() <= 0 or chart_rect.height() <= 0:
             return
 
@@ -109,23 +109,22 @@ class StatRadar(QWidget):
         axis_points = [self._polar_point(center, radius, index) for index in range(len(self.STAT_KEYS))]
 
         painter.setPen(QPen(self._grid_color, 1))
-        for level in range(1, 5):
-            polygon = QPolygonF(
-                [
-                    self._polar_point(center, radius * (level / 4.0), index)
-                    for index in range(len(self.STAT_KEYS))
-                ]
-            )
-            painter.drawPolygon(polygon)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawPolygon(QPolygonF(axis_points))
 
         painter.setPen(QPen(self._axis_color, 1))
         for point in axis_points:
             painter.drawLine(center, point)
 
+        stat_values = [value for value in self._stats.values() if value is not None]
+        display_max_value = self._max_value
+        if stat_values:
+            display_max_value = min(self._max_value, max(max(stat_values), 120))
+
         data_polygon = QPolygonF()
         for index, (key, _label) in enumerate(self.STAT_KEYS):
             value = self._stats.get(key) or 0
-            ratio = min(max(value / self._max_value, 0.0), 1.0) * self._progress
+            ratio = min(max(value / display_max_value, 0.0), 1.0) * self._progress
             data_polygon.append(self._polar_point(center, radius * ratio, index))
 
         painter.setPen(QPen(self._line_color, 2))
@@ -142,7 +141,7 @@ class StatRadar(QWidget):
             value = self._stats[self.STAT_KEYS[index][0]]
             self._draw_axis_label(
                 painter,
-                self._polar_point(center, radius + 28, index),
+                self._polar_point(center, radius + 34, index),
                 f"{label}\n{value if value is not None else '-'}",
             )
 

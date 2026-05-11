@@ -15,7 +15,6 @@ from .view_helpers import (
     first_text,
     make_body_text,
     make_meta_text,
-    make_section_title,
 )
 
 
@@ -50,22 +49,6 @@ class FeaturesView(BasePageView):
         rows = extract_list(data)
         self._update_paging(data, len(rows))
 
-        intro_panel, intro_layout = self.build_panel("introCard")
-        intro_layout.addWidget(make_section_title(tr("features.intro_title"), intro_panel))
-        intro_layout.addWidget(
-            make_body_text(
-                tr("features.intro_desc"),
-                intro_panel,
-            )
-        )
-        self.content_layout.addWidget(intro_panel)
-
-        hint_panel, hint_layout = self.build_panel("pageCard", spacing=8)
-        hint_layout.addWidget(
-            make_meta_text(tr("features.loaded", count=len(rows)), hint_panel)
-        )
-        self.content_layout.addWidget(hint_panel)
-
         cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
         for index, row in enumerate(rows):
             feature_id = row.get("id")
@@ -76,10 +59,23 @@ class FeaturesView(BasePageView):
             title = QLabel(first_text(row, "name", "introduction", default=tr("features.fallback")), card)
             title.setObjectName("resourceTitle")
             layout.addWidget(title)
+            feature_meta_parts = [f"ID: {feature_id if feature_id is not None else '-'}"]
+            jp_name = first_text(row, "jp_name", default="")
+            en_name = first_text(row, "en_name", default="")
+            if jp_name or en_name:
+                feature_meta_parts.append(
+                    tr(
+                        "items.card.meta",
+                        jp_name=jp_name or "-",
+                        en_name=en_name or "-",
+                    )
+                )
+            layout.addWidget(make_meta_text("  |  ".join(feature_meta_parts), card))
             layout.addWidget(make_body_text(first_text(row, "introduction"), card))
             layout.addWidget(make_meta_text(first_text(row, "detail"), card))
             cards_layout.addWidget(card, index // 3, index % 3)
         self.content_layout.addWidget(cards_panel)
+        self.content_layout.addStretch(1)
         add_pagination(
             self.content_layout,
             self.content_widget,
@@ -87,7 +83,6 @@ class FeaturesView(BasePageView):
             total_pages=self._total_pages,
             on_page_changed=self._set_page,
         )
-        self.content_layout.addStretch(1)
 
     def _update_paging(self, data, page_size: int) -> None:
         total_count = extract_count(data)

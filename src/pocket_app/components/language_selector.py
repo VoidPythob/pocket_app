@@ -27,6 +27,8 @@ class LanguageSelector(QWidget):
         I18n.Locales.ZH_CN: "language.chinese",
         I18n.Locales.EN_US: "language.english",
         I18n.Locales.JA_JP: "language.japanese",
+        I18n.Locales.LZH_CN: "language.classical_chinese",
+        I18n.Locales.EX_HY: "language.hymmnos",
     }
 
     def __init__(

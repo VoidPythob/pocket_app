@@ -29,26 +29,25 @@ def render_pet_detail(
     capture_methods = data.get("capture_methods", [])
 
     title = first_text(detail, "name", "en_name", default=tr("common.pet"))
-    subtitle = first_text(detail, "detail", "introduction", default=tr("pets.intro_desc"))
-    add_detail_header(view, title, subtitle, on_back)
+    add_detail_header(view, title, "", on_back)
     en_name = first_text(detail, "en_name", "name", default=tr("common.unknown"))
     failed_text = en_name[:1].upper() if en_name and en_name != tr("common.unknown") else tr("image.empty")
     image_urls = collect_image_urls(detail)
 
     _add_basic_info_panel(view, detail, image_urls, failed_text)
-    _add_rance_panels(view, detail)
-    _add_clickable_skill_panel(view, detail.get("skills", []))
-    _add_clickable_egg_group_panel(view, detail.get("egg_groups", []))
-    add_tag_panel(view, tr("pets.detail.tags"), detail.get("tags", []))
-    add_tag_panel(view, tr("pets.detail.features"), features or detail.get("features", []))
-
-    add_text_list_panel(view, tr("pets.detail.capture_methods"), capture_methods)
     add_image_gallery(
         view,
         tr("pets.detail.images"),
         image_urls,
         failed_text=failed_text,
     )
+    _add_rance_panels(view, detail)
+    _add_clickable_skill_panel(view, detail.get("skills", []))
+    _add_clickable_egg_group_panel(view, detail.get("egg_groups", []))
+    add_tag_panel(view, tr("pets.detail.tags"), detail.get("tags", []))
+    _add_clickable_feature_panel(view, features or detail.get("features", []))
+
+    add_text_list_panel(view, tr("pets.detail.capture_methods"), capture_methods)
 
     generations = extract_list(detail.get("generations"))
     if generations:
@@ -145,6 +144,14 @@ def _add_basic_info_panel(
     title = tr("detail.basic_info")
     layout.addWidget(make_section_title(title if title != "detail.basic_info" else "基本信息", panel))
 
+    capture_probability_label = tr("pets.capture_probability")
+    if capture_probability_label == "pets.capture_probability":
+        capture_probability_label = "捕获概率"
+
+    egg_hatching_steps_label = tr("pets.egg_hatching_steps")
+    if egg_hatching_steps_label == "pets.egg_hatching_steps":
+        egg_hatching_steps_label = "孵化步数"
+
     row = QHBoxLayout()
     row.setSpacing(18)
     row.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -166,6 +173,8 @@ def _add_basic_info_panel(
         ("ID", detail.get("id")),
         (tr("pets.generation"), detail.get("generation") or detail.get("generation_id")),
         (tr("common.gender_ratio"), _format_gender_ratio(detail)),
+        (capture_probability_label, detail.get("capture_probability")),
+        (egg_hatching_steps_label, detail.get("egg_hatching_steps")),
         ("JP", first_text(detail, "jp_name", default="")),
         ("EN", first_text(detail, "en_name", default="")),
     ]:
@@ -257,6 +266,34 @@ def _add_clickable_skill_panel(view: BasePageView, values: Any) -> None:
     view.content_layout.addWidget(panel)
 
 
+def _add_clickable_feature_panel(view: BasePageView, values: Any) -> None:
+    features = extract_list(values)
+    if not features:
+        return
+
+    panel, layout = view.build_panel("pageCard")
+    layout.addWidget(make_section_title(tr("pets.detail.features"), panel))
+
+    row = QHBoxLayout()
+    row.setSpacing(6)
+    for raw in features:
+        if not isinstance(raw, dict):
+            continue
+        feature_id = raw.get("id")
+        if feature_id is None:
+            continue
+        text = first_text(raw, "name", "introduction", default=tr("features.fallback"))
+        color = first_text(raw, "color", default="")
+        tag = Tag(text, parent=panel, background_color=color, tag_id=str(feature_id))
+        tag.tag_clicked.connect(
+            lambda _tag_id, current_id=feature_id: _navigate_to_feature(view, current_id)
+        )
+        row.addWidget(tag)
+    row.addStretch(1)
+    layout.addLayout(row)
+    view.content_layout.addWidget(panel)
+
+
 def _navigate_to_egg_group(view: BasePageView, egg_group_id: int) -> None:
     central = view.window().centralWidget()
     route_name = f"egg_groups/group/{egg_group_id}"
@@ -275,3 +312,16 @@ def _navigate_to_skill(view: BasePageView, skill_id: int) -> None:
     open_detail = getattr(page, "_open_detail", None)
     if callable(open_detail):
         open_detail(skill_id)
+
+
+def _navigate_to_feature(view: BasePageView, feature_id: int) -> None:
+    central = view.window().centralWidget()
+    if central is None or not hasattr(central, "_show_page"):
+        return
+    central._show_page("features")  # type: ignore[attr-defined]
+    page = getattr(central, "_pages", {}).get("features")
+    if page is None:
+        return
+    open_detail = getattr(page, "_open_detail", None)
+    if callable(open_detail):
+        open_detail(feature_id)
