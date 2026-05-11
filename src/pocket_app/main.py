@@ -3,7 +3,7 @@ import sys
 
 from PyQt6.QtWidgets import QApplication
 
-from .config import init_config
+from pocket_app.config import init_config
 from pocket_app.resources import load_app_font
 from pocket_app.views import MainWindow
 

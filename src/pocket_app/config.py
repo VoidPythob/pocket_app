@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -63,7 +64,27 @@ def _resolve_config_path(config_path: str | None) -> Path | None:
         return Path(config_path).expanduser().resolve()
 
     default_path = Path.cwd() / "config.json"
-    return default_path if default_path.exists() else None
+    if default_path.exists():
+        return default_path
+
+    return _resolve_resource_config_path()
+
+
+def _resolve_resource_config_path() -> Path | None:
+    candidates: list[Path] = []
+
+    if getattr(sys, "frozen", False):
+        candidates.append(Path(sys.executable).resolve().parent / "resources" / "config.json")
+        meipass = getattr(sys, "_MEIPASS", "")
+        if meipass:
+            candidates.append(Path(meipass).resolve() / "resources" / "config.json")
+
+    candidates.append(Path(__file__).resolve().parents[2] / "resources" / "config.json")
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
 
 
 def _resolve_logging_level(level: Any) -> int:

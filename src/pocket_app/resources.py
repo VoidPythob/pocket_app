@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import sys
 from enum import Enum
 from os.path import join as path_join
 from pathlib import Path
@@ -20,9 +21,26 @@ class ResourcesException(Exception):
         super().__init__(msg)
 
 
-resources_dir = str(Path(__file__).resolve().parents[2] / "resources")
-if not os.path.exists(resources_dir):
-    raise ResourcesException(f"Resource path not found: {resources_dir}")
+def _resolve_resources_dir() -> str:
+    candidates: list[Path] = []
+
+    if getattr(sys, "frozen", False):
+        candidates.append(Path(sys.executable).resolve().parent / "resources")
+        meipass = getattr(sys, "_MEIPASS", "")
+        if meipass:
+            candidates.append(Path(meipass).resolve() / "resources")
+
+    candidates.append(Path(__file__).resolve().parents[2] / "resources")
+
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+
+    joined = ", ".join(str(path) for path in candidates)
+    raise ResourcesException(f"Resource path not found: {joined}")
+
+
+resources_dir = _resolve_resources_dir()
 
 
 def link_root(root: str) -> str:
