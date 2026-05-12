@@ -30,6 +30,13 @@ QFrame#petCard {
     border-radius: 18px;
 }
 
+QFrame#gameDocCard {
+    background: {{panel_background}};
+    border: 1px solid {{panel_border}};
+    border-radius: 18px;
+    padding : 30px 10px;
+}
+
 QFrame#pageCard,
 QFrame#introCard {
     border: 1px solid {{panel_border}};

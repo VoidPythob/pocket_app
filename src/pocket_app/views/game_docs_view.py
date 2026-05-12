@@ -4,6 +4,7 @@ import asyncio
 from typing import Any
 
 from PyQt6.QtWidgets import QLabel
+from PyQt6.QtCore import Qt
 
 from pocket_app import api
 from pocket_app.resources import tr
@@ -48,7 +49,9 @@ class GameDocsView(BasePageView):
         self._current_page = 1
         super().set_search_text(text)
 
-    def set_category_context(self, category_id: int | None, category_label: str = "") -> bool:
+    def set_category_context(
+        self, category_id: int | None, category_label: str = ""
+    ) -> bool:
         normalized_label = category_label.strip()
         changed = self._group_id != category_id or self._group_label != normalized_label
         self._group_id = category_id
@@ -75,7 +78,9 @@ class GameDocsView(BasePageView):
     def render_data(self, data: dict[str, Any]) -> None:
         clear_layout(self.content_layout)
         if self._detail_doc_id is not None:
-            render_game_doc_detail(self, data if isinstance(data, dict) else {}, self._close_detail)
+            render_game_doc_detail(
+                self, data if isinstance(data, dict) else {}, self._close_detail
+            )
             return
 
         rows = extract_list(data, "docs")
@@ -94,9 +99,13 @@ class GameDocsView(BasePageView):
             card, layout = build_clickable_panel(
                 self,
                 lambda current_id=doc_id: self._open_detail(current_id),
+                object_name="gameDocCard",
             )
-            title = QLabel(first_text(row, "name", default=tr("game_docs.doc_default")), card)
+            title = QLabel(
+                first_text(row, "name", default=tr("game_docs.doc_default")), card
+            )
             title.setObjectName("resourceTitle")
+            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(title)
             cards_layout.addWidget(card, index // 3, index % 3)
         self.content_layout.addWidget(cards_panel)
