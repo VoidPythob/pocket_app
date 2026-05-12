@@ -7,6 +7,7 @@ from pocket_app.resources import tr
 
 from .detail import build_clickable_panel, render_item_detail
 from .view_helpers import (
+    LIST_PAGE_SIZE,
     BasePageView,
     add_pagination,
     clear_layout,
@@ -61,6 +62,7 @@ class ItemsView(BasePageView):
             category_id=self._category_id,
             name=self._search_text,
             page=self._current_page,
+            page_size=LIST_PAGE_SIZE,
         )
 
     def render_data(self, data) -> None:
@@ -69,7 +71,7 @@ class ItemsView(BasePageView):
             render_item_detail(self, data if isinstance(data, dict) else {}, self._close_detail)
             return
         rows = extract_list(data)
-        self._update_paging(data, len(rows))
+        self._update_paging(data)
 
         cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
         for index, row in enumerate(rows):
@@ -105,13 +107,13 @@ class ItemsView(BasePageView):
             on_page_changed=self._set_page,
         )
 
-    def _update_paging(self, data, page_size: int) -> None:
+    def _update_paging(self, data) -> None:
         total_count = extract_count(data)
-        if total_count <= 0 or page_size <= 0:
+        if total_count <= 0:
             self._total_pages = 1
             self._current_page = 1
             return
-        self._total_pages = max(1, (total_count + page_size - 1) // page_size)
+        self._total_pages = max(1, (total_count + LIST_PAGE_SIZE - 1) // LIST_PAGE_SIZE)
         self._current_page = min(max(1, self._current_page), self._total_pages)
 
     def _set_page(self, page: int) -> None:

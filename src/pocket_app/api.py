@@ -330,6 +330,7 @@ async def list_pets(
     feature_id: int | None = None,
     name: str = "",
     page: int | None = None,
+    page_size: int | None = None,
 ) -> Any:
     return await _get(
         "/pets/",
@@ -338,6 +339,7 @@ async def list_pets(
             "feature_id": feature_id,
             "name": name,
             "page": page,
+            "page_size": page_size,
         },
     )
 
@@ -387,16 +389,30 @@ async def get_capture_method_detail(capture_method_id: int) -> Any:
     return await _get(f"/capture_methods/{capture_method_id}/")
 
 
-async def list_features(name: str = "", page: int | None = None) -> Any:
-    return await _get("/features/", params={"name": name, "page": page})
+async def list_features(
+    name: str = "",
+    page: int | None = None,
+    page_size: int | None = None,
+) -> Any:
+    return await _get(
+        "/features/",
+        params={"name": name, "page": page, "page_size": page_size},
+    )
 
 
 async def get_feature_detail(feature_id: int) -> Any:
     return await _get(f"/features/{feature_id}/")
 
 
-async def list_skills(name: str = "", page: int | None = None) -> Any:
-    return await _get("/skills/", params={"name": name, "page": page})
+async def list_skills(
+    name: str = "",
+    page: int | None = None,
+    page_size: int | None = None,
+) -> Any:
+    return await _get(
+        "/skills/",
+        params={"name": name, "page": page, "page_size": page_size},
+    )
 
 
 async def get_skill_detail(skill_id: int) -> Any:
@@ -407,10 +423,16 @@ async def list_items(
     category_id: int | None = None,
     name: str = "",
     page: int | None = None,
+    page_size: int | None = None,
 ) -> Any:
     return await _get(
         "/items/",
-        params={"category_id": category_id, "name": name, "page": page},
+        params={
+            "category_id": category_id,
+            "name": name,
+            "page": page,
+            "page_size": page_size,
+        },
     )
 
 
@@ -422,8 +444,11 @@ async def list_egg_groups() -> Any:
     return await _get("/egg-groups/")
 
 
-async def list_generations(page: int | None = None) -> Any:
-    return await _get("/generations/", params={"page": page})
+async def list_generations(
+    page: int | None = None,
+    page_size: int | None = None,
+) -> Any:
+    return await _get("/generations/", params={"page": page, "page_size": page_size})
 
 
 async def get_generation_detail(generation_id: int) -> Any:
@@ -434,15 +459,26 @@ async def get_egg_group_detail(egg_group_id: int) -> Any:
     return await _get(f"/egg-groups/{egg_group_id}/")
 
 
-async def list_egg_group_pets(egg_group_id: int, page: int | None = None) -> Any:
-    return await _get(f"/egg-groups/{egg_group_id}/pets/", params={"page": page})
+async def list_egg_group_pets(
+    egg_group_id: int,
+    page: int | None = None,
+    page_size: int | None = None,
+) -> Any:
+    return await _get(
+        f"/egg-groups/{egg_group_id}/pets/",
+        params={"page": page, "page_size": page_size},
+    )
 
 
 async def list_game_docs(
     group_id: int | None = None,
     page: int | None = None,
+    page_size: int | None = None,
 ) -> Any:
-    return await _get("/game-docs/", params={"group_id": group_id, "page": page})
+    return await _get(
+        "/game-docs/",
+        params={"group_id": group_id, "page": page, "page_size": page_size},
+    )
 
 
 async def get_game_doc_detail(game_doc_id: int) -> Any:

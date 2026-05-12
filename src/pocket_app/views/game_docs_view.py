@@ -10,6 +10,7 @@ from pocket_app.resources import tr
 
 from .detail import build_clickable_panel, render_game_doc_detail
 from .view_helpers import (
+    LIST_PAGE_SIZE,
     BasePageView,
     add_pagination,
     clear_layout,
@@ -17,6 +18,7 @@ from .view_helpers import (
     extract_list,
     first_text,
     make_meta_text,
+    paginate_rows,
 )
 
 
@@ -64,7 +66,11 @@ class GameDocsView(BasePageView):
         if self.search_text:
             docs = await self._fetch_all_docs_for_search()
             return {"docs": docs, "count": len(docs), "search_mode": True}
-        return await api.list_game_docs(group_id=self._group_id, page=self._current_page)
+        return await api.list_game_docs(
+            group_id=self._group_id,
+            page=self._current_page,
+            page_size=LIST_PAGE_SIZE,
+        )
 
     def render_data(self, data: dict[str, Any]) -> None:
         clear_layout(self.content_layout)
@@ -74,7 +80,13 @@ class GameDocsView(BasePageView):
 
         rows = extract_list(data, "docs")
         filtered_rows = self._filter_rows(rows)
-        self._update_paging(data, len(rows))
+        if data.get("search_mode"):
+            filtered_rows, self._current_page, self._total_pages = paginate_rows(
+                filtered_rows,
+                self._current_page,
+            )
+        else:
+            self._update_paging(data)
 
         cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
         for index, row in enumerate(filtered_rows):
@@ -98,7 +110,11 @@ class GameDocsView(BasePageView):
         )
 
     async def _fetch_all_docs_for_search(self) -> list[dict[str, Any]]:
-        first_page = await api.list_game_docs(group_id=self._group_id, page=1)
+        first_page = await api.list_game_docs(
+            group_id=self._group_id,
+            page=1,
+            page_size=LIST_PAGE_SIZE,
+        )
         rows = extract_list(first_page, "docs")
         count = first_page.get("count") if isinstance(first_page, dict) else None
         if isinstance(count, int) and rows:
@@ -106,7 +122,14 @@ class GameDocsView(BasePageView):
             total_pages = max(1, (count + page_size - 1) // page_size)
             if total_pages > 1:
                 payloads = await asyncio.gather(
-                    *(api.list_game_docs(group_id=self._group_id, page=page) for page in range(2, total_pages + 1))
+                    *(
+                        api.list_game_docs(
+                            group_id=self._group_id,
+                            page=page,
+                            page_size=LIST_PAGE_SIZE,
+                        )
+                        for page in range(2, total_pages + 1)
+                    )
                 )
                 all_rows = list(rows)
                 for payload in payloads:
@@ -125,17 +148,13 @@ class GameDocsView(BasePageView):
             or keyword in str(row.get("id", "")).lower()
         ]
 
-    def _update_paging(self, data: Any, page_size: int) -> None:
-        if self.search_text:
-            self._current_page = 1
-            self._total_pages = 1
-            return
+    def _update_paging(self, data: Any) -> None:
         total_count = extract_count(data)
-        if total_count <= 0 or page_size <= 0:
+        if total_count <= 0:
             self._total_pages = 1
             self._current_page = 1
             return
-        self._total_pages = max(1, (total_count + page_size - 1) // page_size)
+        self._total_pages = max(1, (total_count + LIST_PAGE_SIZE - 1) // LIST_PAGE_SIZE)
         self._current_page = min(max(1, self._current_page), self._total_pages)
 
     def _set_page(self, page: int) -> None:

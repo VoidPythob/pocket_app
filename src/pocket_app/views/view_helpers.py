@@ -20,6 +20,8 @@ from pocket_app.api import cancel_api_tasks, submit_api_task
 from pocket_app.components import LoadingPlaceholder, PaginationBar
 from pocket_app.resources import tr
 
+LIST_PAGE_SIZE = 9
+
 
 def clear_layout(layout: QLayout) -> None:
     while layout.count():
@@ -53,6 +55,24 @@ def extract_count(data: Any) -> int:
         if isinstance(count, int):
             return count
     return len(extract_list(data))
+
+
+def paginate_rows(
+    rows: list[Any],
+    current_page: int,
+    *,
+    page_size: int = LIST_PAGE_SIZE,
+) -> tuple[list[Any], int, int]:
+    if page_size <= 0:
+        return rows, 1, 1
+    total_count = len(rows)
+    if total_count <= 0:
+        return [], 1, 1
+    total_pages = max(1, (total_count + page_size - 1) // page_size)
+    normalized_page = min(max(1, current_page), total_pages)
+    start = (normalized_page - 1) * page_size
+    end = start + page_size
+    return rows[start:end], normalized_page, total_pages
 
 
 def normalize_names(values: Any) -> list[str]:

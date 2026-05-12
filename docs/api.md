@@ -54,6 +54,20 @@
 }
 ```
 
+说明：
+
+- `POST /admin/register/` 仅允许已登录管理员调用，用于注册新的管理员账号
+
+### 3.3 管理员登出
+
+- 方法：`POST`
+- 路径：`/admin/logout/`
+- 权限：管理员
+
+说明：
+
+- 调用后会清除当前管理员登录会话
+
 ## 4. 公共查询接口
 
 ### 4.1 宠物列表
@@ -66,13 +80,16 @@
 
 - `generation_id`：世代 ID，必传
 - `feature_id`：特性 ID，可选
+- `tag_id`：标签 ID，可选
 - `name`：宠物中文名，模糊搜索，可选
+- `page_size`：每页条数，可选，最大 `100`
 - `page`：页码，可选
 
 说明：
 
 - 只返回指定世代下的宠物
 - 支持按特性与世代同时筛选
+- 支持按标签与世代同时筛选
 - 支持按中文名模糊搜索
 - 列表项返回：`id`、`name`、`jp_name`、`en_name`、`first_image_url`、`tags`、`features`
 - `tags` 单项包含：`id`、`name`、`color`
@@ -297,14 +314,33 @@
   "jp_name": "ピカチュウ",
   "en_name": "Pikachu",
   "feature_ids": [1, 2],
+  "generation_id": 1,
   "rance_id": 3,
   "skill_ids": [10, 11]
 }
 ```
 
+### 5.1.1 修改宠物
+
+- 方法：`GET` `PUT` `PATCH`
+- 路径：`/admin/pets/{id}/`
+- 权限：管理员
+
+请求体：
+
+- `PUT`：参数与创建宠物一致，需完整提交
+- `PATCH`：按需传入要修改的字段
+
+说明：
+
+- 支持修改 `icon_urls`、`name`、`jp_name`、`en_name`、`feature_ids`、`generation_id`、`rance_id`、`skill_ids`
+- 传入 `icon_urls` 时会整体替换当前宠物图片，第一张仍作为封面
+- 传入 `feature_ids`、`generation_id`、`rance_id`、`skill_ids` 时会替换对应关联
+
 说明：
 
 - `icon_urls`、`feature_ids`、`skill_ids` 会自动去重
+- `generation_id` 为必传
 - 第一个图片会作为封面
 - 会校验特性、种族、技能是否存在
 
@@ -367,6 +403,10 @@
 - `PATCH /admin/rances/{id}/`
 - `DELETE /admin/rances/{id}/`
 
+说明：
+
+- 列表接口 `GET /admin/rances/` 支持 `page`、`page_size` 分页参数，`page_size` 最大 `100`
+
 字段：
 
 - `p_id`
@@ -411,6 +451,10 @@
 - `PATCH /admin/generations/{id}/`
 - `DELETE /admin/generations/{id}/`
 
+说明：
+
+- 列表接口 `GET /admin/generations/` 支持 `page`、`page_size` 分页参数，`page_size` 最大 `100`
+
 字段：
 
 - `name`
@@ -427,6 +471,10 @@
 - `PUT /admin/skills/{id}/`
 - `PATCH /admin/skills/{id}/`
 - `DELETE /admin/skills/{id}/`
+
+说明：
+
+- 列表接口 `GET /admin/skills/` 支持 `page`、`page_size` 分页参数，`page_size` 最大 `100`
 
 字段：
 
@@ -508,6 +556,10 @@
 - `PUT /admin/egg-groups/{id}/`
 - `PATCH /admin/egg-groups/{id}/`
 - `DELETE /admin/egg-groups/{id}/`
+
+说明：
+
+- 列表接口 `GET /admin/egg-groups/` 支持 `page`、`page_size` 分页参数，`page_size` 最大 `100`
 
 字段：
 
@@ -599,8 +651,11 @@
 ### 7.2 管理员接口
 
 - `POST /admin/login/`
+- `POST /admin/logout/`
 - `POST /admin/register/`
+- `POST /admin/pets/import-csv/`
 - `POST /admin/pets/`
+- `GET|PUT|PATCH|DELETE /admin/pets/{id}/`
 - `GET|POST|PUT|PATCH /admin/tags/ /admin/tags/{id}/`
 - `GET|POST|PUT|PATCH|DELETE /admin/rances/ /admin/rances/{id}/`
 - `GET|POST|PUT|PATCH|DELETE /admin/features/ /admin/features/{id}/`

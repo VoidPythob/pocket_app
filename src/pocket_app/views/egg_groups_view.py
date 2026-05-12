@@ -9,11 +9,13 @@ from pocket_app import api
 from pocket_app.components import PetCard
 from .detail import render_egg_group_detail, render_pet_detail
 from .view_helpers import (
+    LIST_PAGE_SIZE,
     BasePageView,
     add_pagination,
     clear_layout,
     extract_count,
     extract_list,
+    paginate_rows,
 )
 
 
@@ -61,7 +63,11 @@ class EggGroupsView(BasePageView):
         if self._detail_group_id is not None:
             detail, pets = await asyncio.gather(
                 api.get_egg_group_detail(self._detail_group_id),
-                api.list_egg_group_pets(self._detail_group_id, page=1),
+                api.list_egg_group_pets(
+                    self._detail_group_id,
+                    page=1,
+                    page_size=LIST_PAGE_SIZE,
+                ),
             )
             return {"detail": detail, "pets": pets}
         if self._group_id is None:
@@ -70,7 +76,11 @@ class EggGroupsView(BasePageView):
         if self.search_text:
             pets = await self._fetch_all_group_pets_for_search()
             return {"detail": detail, "pets": pets, "search_mode": True}
-        pets = await api.list_egg_group_pets(self._group_id, page=self._current_page)
+        pets = await api.list_egg_group_pets(
+            self._group_id,
+            page=self._current_page,
+            page_size=LIST_PAGE_SIZE,
+        )
         return {"detail": detail, "pets": pets}
 
     def render_data(self, data: dict[str, Any]) -> None:
@@ -84,14 +94,20 @@ class EggGroupsView(BasePageView):
 
         pets_payload = data["pets"]
         selected_pets = extract_list(pets_payload)
-        self._update_paging(pets_payload, len(selected_pets), bool(data.get("search_mode")))
-
-        cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
         filtered_rows = [
             row
             for row in selected_pets
             if not self._search_text or self._search_text.lower() in str(row).lower()
         ]
+        if data.get("search_mode"):
+            filtered_rows, self._current_page, self._total_pages = paginate_rows(
+                filtered_rows,
+                self._current_page,
+            )
+        else:
+            self._update_paging(pets_payload)
+
+        cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
         for index, row in enumerate(filtered_rows):
             cards_layout.addWidget(self._build_pet_card(row), index // 3, index % 3)
         self.content_layout.addWidget(cards_panel)
@@ -105,7 +121,11 @@ class EggGroupsView(BasePageView):
         )
 
     async def _fetch_all_group_pets_for_search(self) -> dict[str, Any]:
-        first_page = await api.list_egg_group_pets(self._group_id, page=1)
+        first_page = await api.list_egg_group_pets(
+            self._group_id,
+            page=1,
+            page_size=LIST_PAGE_SIZE,
+        )
         rows = extract_list(first_page)
         count = first_page.get("count") if isinstance(first_page, dict) else None
         all_rows = list(rows)
@@ -114,7 +134,14 @@ class EggGroupsView(BasePageView):
             total_pages = max(1, (count + page_size - 1) // page_size)
             if total_pages > 1:
                 payloads = await asyncio.gather(
-                    *(api.list_egg_group_pets(self._group_id, page=page) for page in range(2, total_pages + 1))
+                    *(
+                        api.list_egg_group_pets(
+                            self._group_id,
+                            page=page,
+                            page_size=LIST_PAGE_SIZE,
+                        )
+                        for page in range(2, total_pages + 1)
+                    )
                 )
                 for payload in payloads:
                     all_rows.extend(extract_list(payload))
@@ -141,17 +168,13 @@ class EggGroupsView(BasePageView):
         self._detail_group_id = None
         self.refresh()
 
-    def _update_paging(self, data, page_size: int, search_mode: bool) -> None:
-        if search_mode:
-            self._current_page = 1
-            self._total_pages = 1
-            return
+    def _update_paging(self, data) -> None:
         total_count = extract_count(data)
-        if total_count <= 0 or page_size <= 0:
+        if total_count <= 0:
             self._total_pages = 1
             self._current_page = 1
             return
-        self._total_pages = max(1, (total_count + page_size - 1) // page_size)
+        self._total_pages = max(1, (total_count + LIST_PAGE_SIZE - 1) // LIST_PAGE_SIZE)
         self._current_page = min(max(1, self._current_page), self._total_pages)
 
     def _set_page(self, page: int) -> None:

@@ -12,6 +12,7 @@ from pocket_app.resources import tr
 
 from .detail import render_pet_detail
 from .view_helpers import (
+    LIST_PAGE_SIZE,
     BasePageView,
     add_pagination,
     clear_layout,
@@ -77,6 +78,7 @@ class PetsView(BasePageView):
                 feature_id=self._feature_id,
                 name=self._search_text,
                 page=self._current_page,
+                page_size=LIST_PAGE_SIZE,
             ),
         )
         return {"features": features, "pets": pets}
@@ -91,7 +93,7 @@ class PetsView(BasePageView):
         features = extract_list(data["features"])
         pets_payload = data["pets"]
         pets = extract_list(pets_payload)
-        self._update_paging(pets_payload, len(pets))
+        self._update_paging(pets_payload)
 
         filter_panel, filter_layout = self.build_panel("pageCard")
         filter_layout.addWidget(make_section_title(tr("common.filters"), filter_panel))
@@ -195,13 +197,13 @@ class PetsView(BasePageView):
         self._current_page = 1
         self.refresh()
 
-    def _update_paging(self, data, page_size: int) -> None:
+    def _update_paging(self, data) -> None:
         total_count = extract_count(data)
-        if total_count <= 0 or page_size <= 0:
+        if total_count <= 0:
             self._total_pages = 1
             self._current_page = 1
             return
-        self._total_pages = max(1, (total_count + page_size - 1) // page_size)
+        self._total_pages = max(1, (total_count + LIST_PAGE_SIZE - 1) // LIST_PAGE_SIZE)
         self._current_page = min(max(1, self._current_page), self._total_pages)
 
     def _set_page(self, page: int) -> None:

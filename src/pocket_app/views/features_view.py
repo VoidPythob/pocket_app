@@ -7,6 +7,7 @@ from pocket_app.resources import tr
 
 from .detail import build_clickable_panel, render_feature_detail
 from .view_helpers import (
+    LIST_PAGE_SIZE,
     BasePageView,
     add_pagination,
     clear_layout,
@@ -39,7 +40,11 @@ class FeaturesView(BasePageView):
     async def fetch_data(self):
         if self._selected_feature_id is not None:
             return await api.get_feature_detail(self._selected_feature_id)
-        return await api.list_features(name=self._search_text, page=self._current_page)
+        return await api.list_features(
+            name=self._search_text,
+            page=self._current_page,
+            page_size=LIST_PAGE_SIZE,
+        )
 
     def render_data(self, data) -> None:
         clear_layout(self.content_layout)
@@ -47,7 +52,7 @@ class FeaturesView(BasePageView):
             render_feature_detail(self, data if isinstance(data, dict) else {}, self._close_detail)
             return
         rows = extract_list(data)
-        self._update_paging(data, len(rows))
+        self._update_paging(data)
 
         cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
         for index, row in enumerate(rows):
@@ -84,13 +89,13 @@ class FeaturesView(BasePageView):
             on_page_changed=self._set_page,
         )
 
-    def _update_paging(self, data, page_size: int) -> None:
+    def _update_paging(self, data) -> None:
         total_count = extract_count(data)
-        if total_count <= 0 or page_size <= 0:
+        if total_count <= 0:
             self._total_pages = 1
             self._current_page = 1
             return
-        self._total_pages = max(1, (total_count + page_size - 1) // page_size)
+        self._total_pages = max(1, (total_count + LIST_PAGE_SIZE - 1) // LIST_PAGE_SIZE)
         self._current_page = min(max(1, self._current_page), self._total_pages)
 
     def _set_page(self, page: int) -> None:
