@@ -119,7 +119,7 @@ def add_pagination(
     )
     pagination.page_changed.connect(on_page_changed)
     layout.addWidget(pagination)
-    layout.addSpacing(20)
+    layout.addSpacing(50)
     return pagination
 
 
