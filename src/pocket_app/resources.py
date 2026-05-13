@@ -148,7 +148,7 @@ class Fonts:
     genshin = path_join(_root, "genshin.ttf")
     hymmnos = path_join(_root, "hymmnos.ttf")
     jinwen = path_join(_root, "jinwen.ttf")
-    zaken_manus = path_join(_root, "zaken_manus.otf")
+    times_new_roman = path_join(_root, "times_new_roman.ttf")
 
 
 class _Qss:
@@ -363,7 +363,9 @@ def font_family_for_locale(locale: _I18n.Locales | None = None) -> str:
     target_locale = locale or I18n.current_locale
     default_family = _resolve_default_font_family()
     if target_locale == _I18n.Locales.EN_US:
-        return _load_font_family("zaken_manus", Fonts.zaken_manus, default_family)
+        return _load_font_family(
+            "times_new_roman", Fonts.times_new_roman, default_family
+        )
     if target_locale == _I18n.Locales.JA_JP:
         return _load_font_family("eva", Fonts.eva, default_family)
     if target_locale == _I18n.Locales.EX_HY:
@@ -386,7 +388,7 @@ def apply_locale_font(locale: _I18n.Locales | None = None) -> QFont:
 def preload_app_fonts() -> None:
     default_family = _resolve_default_font_family()
     _load_font_family("eva", Fonts.eva, default_family)
-    _load_font_family("zaken_manus", Fonts.zaken_manus, default_family)
+    _load_font_family("times_new_roman", Fonts.times_new_roman, default_family)
     _load_font_family("hymmnos", Fonts.hymmnos, default_family)
     _load_font_family("jinwen", Fonts.jinwen, default_family)
 
