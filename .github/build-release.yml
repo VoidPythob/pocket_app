@@ -1,0 +1,40 @@
+name: build-release
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: windows-2022
+    architecture: x64
+    steps:
+      - name: 签出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 设置 Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          architecture: "x64"
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      - name: 执行构建
+        run: |
+          ./scripts/build.ps1
+      - name: 打包发布文件
+        run: |
+          cd dist
+          7z a ../pocket-app-win32.zip pocket-app-win32/
+          cd ..
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: pocket-app-win32.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
