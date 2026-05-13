@@ -61,5 +61,5 @@ coll = COLLECT(  # type: ignore
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="pocket-app-win32",
+    name="pocket-app-win64",
 )
