@@ -6,13 +6,18 @@ import sys
 from pathlib import Path
 from typing import Any
 
-DEFAULT_CONFIG = {"logging_level": "DEBUG", "api_base_url": "http://127.0.0.1:8080"}
+DEFAULT_CONFIG = {
+    "logging_level": "DEBUG",
+    "open_ssl": True,
+    "api_base_url": "http://127.0.0.1:8080",
+}
 
 
 class Config:
     logging_level = logging.DEBUG
     api_base_url = DEFAULT_CONFIG["api_base_url"]
     config_path: str | None = None
+    open_ssl: bool = True
 
 
 def load_config(config_path: str | None = None) -> dict[str, Any]:
@@ -38,6 +43,7 @@ def apply_config(config_data: dict[str, Any], config_path: str | None = None) ->
         config_data.get("api_base_url", DEFAULT_CONFIG["api_base_url"])
     ).rstrip("/")
     Config.config_path = str(resolved_path) if resolved_path is not None else None
+    Config.open_ssl = _resolve_open_ssl(config_data.get("open_ssl"))
 
 
 def init_logging_config() -> None:
@@ -55,8 +61,10 @@ def init_config(config_path: str | None = None) -> None:
     init_logging_config()
 
     from pocket_app.api import set_base_url
+    from pocket_app.api import set_open_ssl
 
     set_base_url(Config.api_base_url)
+    set_open_ssl(Config.open_ssl)
 
 
 def _resolve_config_path(config_path: str | None) -> Path | None:
@@ -74,7 +82,9 @@ def _resolve_resource_config_path() -> Path | None:
     candidates: list[Path] = []
 
     if getattr(sys, "frozen", False):
-        candidates.append(Path(sys.executable).resolve().parent / "resources" / "config.json")
+        candidates.append(
+            Path(sys.executable).resolve().parent / "resources" / "config.json"
+        )
         meipass = getattr(sys, "_MEIPASS", "")
         if meipass:
             candidates.append(Path(meipass).resolve() / "resources" / "config.json")
@@ -99,3 +109,7 @@ def _resolve_logging_level(level: Any) -> int:
                 return resolved
 
     return logging.DEBUG
+
+
+def _resolve_open_ssl(ssl: bool | None) -> bool:
+    return False if ssl is None else ssl

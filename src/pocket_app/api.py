@@ -11,8 +11,10 @@ from PyQt6.QtCore import QCoreApplication, QObject, QThread, Qt, pyqtSignal, pyq
 from pocket_app.config import Config
 
 DEFAULT_BASE_URL = Config.api_base_url
+DEFAULT_OPEN_SSL = Config.open_ssl
 
 _base_url = os.getenv("POCKET_API_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
+_open_ssl = DEFAULT_BASE_URL
 _session_cookies: dict[str, str] = {}
 
 
@@ -79,7 +81,9 @@ class _ApiTaskDispatcher(QObject):
         self._receiver_tasks.setdefault(receiver_id, set()).add(task_id)
         if receiver_id not in self._tracked_receivers:
             receiver.destroyed.connect(
-                lambda _obj=None, current_id=receiver_id: self._cancel_receiver_tasks(current_id)
+                lambda _obj=None, current_id=receiver_id: self._cancel_receiver_tasks(
+                    current_id
+                )
             )
             self._tracked_receivers.add(receiver_id)
 
@@ -121,8 +125,12 @@ class _ApiTaskDispatcher(QObject):
         thread = QThread(self)
         worker = _ApiTaskWorker()
         worker.moveToThread(thread)
-        self.submit_requested.connect(worker.run_task, Qt.ConnectionType.QueuedConnection)
-        worker.finished.connect(self._handle_task_finished, Qt.ConnectionType.QueuedConnection)
+        self.submit_requested.connect(
+            worker.run_task, Qt.ConnectionType.QueuedConnection
+        )
+        worker.finished.connect(
+            self._handle_task_finished, Qt.ConnectionType.QueuedConnection
+        )
         thread.finished.connect(worker.deleteLater)
         thread.finished.connect(thread.deleteLater)
         thread.start()
@@ -189,6 +197,11 @@ def set_base_url(base_url: str) -> None:
     _base_url = base_url.rstrip("/")
 
 
+def set_open_ssl(open_ssl: bool) -> None:
+    global _open_ssl
+    _open_ssl = open_ssl
+
+
 def get_base_url() -> str:
     return _base_url
 
@@ -214,6 +227,7 @@ async def _request_async(
             json=json_data,
             cookies=_session_cookies or None,
             headers={"Accept": "application/json"},
+            ssl=_open_ssl,
         ) as response:
             _update_session_cookies(response.cookies)
             payload = await _read_response_payload(response)
@@ -247,7 +261,11 @@ def _unwrap_result(status: int, payload: Any) -> Any:
 def _clean_mapping(mapping: dict[str, Any] | None) -> dict[str, Any] | None:
     if mapping is None:
         return None
-    return {key: value for key, value in mapping.items() if value is not None and value != ""}
+    return {
+        key: value
+        for key, value in mapping.items()
+        if value is not None and value != ""
+    }
 
 
 def _update_session_cookies(cookies: Any) -> None:
@@ -350,25 +368,41 @@ async def get_pet_detail(pet_id: int) -> Any:
 
 async def get_pet_detail_payload(pet_id: int) -> dict[str, Any]:
     raw_detail = await get_pet_detail(pet_id)
-    detail = raw_detail.get("detail") if isinstance(raw_detail, dict) and isinstance(raw_detail.get("detail"), dict) else raw_detail
+    detail = (
+        raw_detail.get("detail")
+        if isinstance(raw_detail, dict) and isinstance(raw_detail.get("detail"), dict)
+        else raw_detail
+    )
     if not isinstance(detail, dict):
         return {"detail": {}, "features": [], "capture_methods": []}
 
     features = _extract_collection(detail.get("features"), "features")
-    capture_methods = _extract_collection(detail.get("capture_methods"), "capture_methods")
+    capture_methods = _extract_collection(
+        detail.get("capture_methods"), "capture_methods"
+    )
     need_features = features is None
     need_capture_methods = capture_methods is None
 
     if need_features or need_capture_methods:
         fallback_results = await asyncio.gather(
-            list_pet_features(pet_id, page=1) if need_features else _return_async(features),
-            list_pet_capture_methods(pet_id, page=1) if need_capture_methods else _return_async(capture_methods),
+            (
+                list_pet_features(pet_id, page=1)
+                if need_features
+                else _return_async(features)
+            ),
+            (
+                list_pet_capture_methods(pet_id, page=1)
+                if need_capture_methods
+                else _return_async(capture_methods)
+            ),
             return_exceptions=True,
         )
         if need_features and not isinstance(fallback_results[0], Exception):
             features = _extract_collection(fallback_results[0], "features")
         if need_capture_methods and not isinstance(fallback_results[1], Exception):
-            capture_methods = _extract_collection(fallback_results[1], "capture_methods")
+            capture_methods = _extract_collection(
+                fallback_results[1], "capture_methods"
+            )
 
     return {
         "detail": detail,
@@ -647,7 +681,9 @@ async def create_admin_skill_category(name: str) -> Any:
 
 
 async def update_admin_skill_category(category_id: int, name: str) -> Any:
-    return await _put(f"/admin/skill-categories/{category_id}/", json_data={"name": name})
+    return await _put(
+        f"/admin/skill-categories/{category_id}/", json_data={"name": name}
+    )
 
 
 async def patch_admin_skill_category(category_id: int, **fields: Any) -> Any:
@@ -695,7 +731,9 @@ async def create_admin_item_category(name: str) -> Any:
 
 
 async def update_admin_item_category(category_id: int, name: str) -> Any:
-    return await _put(f"/admin/item-categories/{category_id}/", json_data={"name": name})
+    return await _put(
+        f"/admin/item-categories/{category_id}/", json_data={"name": name}
+    )
 
 
 async def patch_admin_item_category(category_id: int, **fields: Any) -> Any:

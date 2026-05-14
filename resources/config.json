@@ -1,4 +1,5 @@
 {
   "logging_level": "INFO",
-  "api_base_url": "http://127.0.0.1:8000"
+  "api_base_url": "https://frp-say.com:31630",
+  "open_ssl": false
 }
