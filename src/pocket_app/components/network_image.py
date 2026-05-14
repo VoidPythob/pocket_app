@@ -32,6 +32,7 @@ class RoundedNetworkImage(QWidget):
         self._has_requested = False
         self._failed = False
         self._placeholder_text = tr("image.empty")
+        self._custom_placeholder_text = False
         self._failed_text = failed_text.strip() or tr("image.failed")
         self.setMinimumSize(width, height)
         self.setFixedSize(width, height)
@@ -72,7 +73,9 @@ class RoundedNetworkImage(QWidget):
         return self._circular
 
     def set_placeholder_text(self, text: str) -> None:
-        self._placeholder_text = text.strip() or tr("image.empty")
+        normalized = text.strip()
+        self._custom_placeholder_text = bool(normalized)
+        self._placeholder_text = normalized or tr("image.empty")
         self.update()
 
     def set_failed_text(self, text: str) -> None:
@@ -145,6 +148,8 @@ class RoundedNetworkImage(QWidget):
             return self._placeholder_text
         if self._failed:
             return self._failed_text
+        if self._custom_placeholder_text:
+            return self._placeholder_text
         if self._has_requested:
             return tr("image.loading")
         return tr("image.pending")

@@ -6,6 +6,7 @@ from typing import Any
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
+from pocket_app import api
 from pocket_app.components.network_image import RoundedNetworkImage
 from pocket_app.components.tag import Tag
 from pocket_app.resources import tr
@@ -47,6 +48,24 @@ def _normalize_names(values: Iterable[Any]) -> list[str]:
         elif item is not None:
             names.append(str(item))
     return names
+
+
+def _failed_image_text(data: dict[str, Any]) -> str:
+    en_name = _first_text(data, "en_name", default="")
+    for char in en_name.strip():
+        if char.isascii() and char.isalnum():
+            return char.upper()
+    return tr("image.empty")
+
+
+def _resolve_image_url(data: dict[str, Any]) -> str:
+    raw_url = _first_text(data, "first_image_url", default="")
+    if not raw_url:
+        return ""
+    normalized = raw_url.strip()
+    if normalized.startswith(("http://", "https://", "data:")):
+        return normalized
+    return api.get_file_url(normalized)
 
 
 class PetCard(QFrame):
@@ -117,10 +136,10 @@ class PetCard(QFrame):
     def set_pet(self, pet: dict[str, Any]) -> None:
         self._pet = dict(pet)
 
-        en_name = _first_text(self._pet, "en_name", "name", default=tr("common.unknown"))
-        failed_text = en_name[:1].upper() if en_name and en_name != tr("common.unknown") else tr("image.empty")
+        failed_text = _failed_image_text(self._pet)
+        self._icon.set_placeholder_text(failed_text)
         self._icon.set_failed_text(failed_text)
-        self._icon.set_url(_first_text(self._pet, "first_image_url", default=""))
+        self._icon.set_url(_resolve_image_url(self._pet))
 
         self._title_label.setText(_first_text(self._pet, "name", "en_name", default=tr("common.unknown")))
         self._meta_label.setText(self._language_line())
