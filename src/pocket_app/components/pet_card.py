@@ -69,6 +69,8 @@ def _resolve_image_url(data: dict[str, Any]) -> str:
 
 
 class PetCard(QFrame):
+    TAG_WIDTH = 72
+
     clicked = pyqtSignal(object)
 
     def __init__(
@@ -192,6 +194,7 @@ class PetCard(QFrame):
                 color = _first_text(raw_tag, "color", default="")
             tag = Tag(tag_name, parent=self._tag_host, background_color=color)
             tag.setEnabled(False)
+            tag.setFixedWidth(self.TAG_WIDTH)
             self._tag_row.addWidget(tag)
             has_tags = True
 
