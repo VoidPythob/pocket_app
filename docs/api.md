@@ -339,7 +339,8 @@
   "feature_ids": [1, 2],
   "generation_id": 1,
   "rance_id": 3,
-  "skill_ids": [10, 11]
+  "skill_ids": [10, 11],
+  "tag_ids": [1, 3]
 }
 ```
 
@@ -356,16 +357,16 @@
 
 说明：
 
-- 支持修改 `icon_urls`、`name`、`jp_name`、`en_name`、`feature_ids`、`generation_id`、`rance_id`、`skill_ids`
+- 支持修改 `icon_urls`、`name`、`jp_name`、`en_name`、`feature_ids`、`generation_id`、`rance_id`、`skill_ids`、`tag_ids`
 - 传入 `icon_urls` 时会整体替换当前宠物图片，第一张仍作为封面
-- 传入 `feature_ids`、`generation_id`、`rance_id`、`skill_ids` 时会替换对应关联
+- 传入 `feature_ids`、`generation_id`、`rance_id`、`skill_ids`、`tag_ids` 时会替换对应关联
 
 说明：
 
-- `icon_urls`、`feature_ids`、`skill_ids` 会自动去重
+- `icon_urls`、`feature_ids`、`skill_ids`、`tag_ids` 会自动去重
 - `generation_id` 为必传
 - 第一个图片会作为封面
-- 会校验特性、种族、技能是否存在
+- 会校验特性、种族、技能、标签是否存在
 
 ### 5.2 宠物种族绑定
 
@@ -411,11 +412,13 @@
 - `POST /admin/tags/`
 - `PUT /admin/tags/{id}/`
 - `PATCH /admin/tags/{id}/`
+- `DELETE /admin/tags/{id}/`
 
 字段：
 
 - `name`
 - `color`
+- 如果标签已经绑定宠物，则不允许删除
 
 ### 6.2 种族
 
@@ -685,7 +688,7 @@
 - `POST /admin/pets/import-csv/`
 - `POST /admin/pets/`
 - `GET|PUT|PATCH|DELETE /admin/pets/{id}/`
-- `GET|POST|PUT|PATCH /admin/tags/ /admin/tags/{id}/`
+- `GET|POST|PUT|PATCH|DELETE /admin/tags/ /admin/tags/{id}/`
 - `GET|POST|PUT|PATCH|DELETE /admin/rances/ /admin/rances/{id}/`
 - `GET|POST|PUT|PATCH|DELETE /admin/features/ /admin/features/{id}/`
 - `GET|POST|PUT|PATCH|DELETE /admin/generations/ /admin/generations/{id}/`
