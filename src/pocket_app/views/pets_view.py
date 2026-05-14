@@ -33,13 +33,17 @@ class PetsView(BasePageView):
         self._generation_id: int | None = None
         self._generation_label = ""
         self._feature_id: int | None = None
+        self._tag_id: int | None = None
         self._detail_pet_id: int | None = None
         self._feature_popup = PopupPanel(offset_y=10, match_anchor_width=True)
+        self._tag_popup = PopupPanel(offset_y=10, match_anchor_width=True)
         self._current_page = 1
         self._total_pages = 1
+        self._tag_options: dict[int, dict[str, Any]] = {}
 
     def reset_filters(self) -> None:
         self._feature_id = None
+        self._tag_id = None
         self._current_page = 1
         self.refresh()
 
@@ -53,7 +57,9 @@ class PetsView(BasePageView):
         self._generation_label = normalized_label
         if changed:
             self._detail_pet_id = None
+            self._tag_id = None
             self._current_page = 1
+            self._tag_options.clear()
         return changed
 
     def set_search_text(self, text: str) -> None:
@@ -76,6 +82,7 @@ class PetsView(BasePageView):
             api.list_pets(
                 generation_id=self._generation_id,
                 feature_id=self._feature_id,
+                tag_id=self._tag_id,
                 name=self._search_text,
                 page=self._current_page,
                 page_size=LIST_PAGE_SIZE,
@@ -85,6 +92,7 @@ class PetsView(BasePageView):
 
     def render_data(self, data: dict[str, Any]) -> None:
         self._feature_popup.hide()
+        self._tag_popup.hide()
         clear_layout(self.content_layout)
         if self._detail_pet_id is not None:
             render_pet_detail(self, data if isinstance(data, dict) else {}, self._close_detail)
@@ -93,11 +101,13 @@ class PetsView(BasePageView):
         features = extract_list(data["features"])
         pets_payload = data["pets"]
         pets = extract_list(pets_payload)
+        self._remember_tag_options(pets)
+        tags = self._current_tag_options()
         self._update_paging(pets_payload)
 
         filter_panel, filter_layout = self.build_panel("pageCard")
         filter_layout.addWidget(make_section_title(tr("common.filters"), filter_panel))
-        self._add_feature_row(filter_layout, filter_panel, features)
+        self._add_filter_row(filter_layout, filter_panel, features, tags)
         self.content_layout.addWidget(filter_panel)
 
         cards_panel, cards_layout = self.build_grid_panel("cardCollectionPanel")
@@ -133,6 +143,49 @@ class PetsView(BasePageView):
         self._feature_popup.set_content_widget(self._build_feature_popup_content(features))
         self._feature_popup.bind_toggle(trigger)
         row.addWidget(trigger)
+        row.addStretch(1)
+        parent_layout.addLayout(row)
+
+    def _add_filter_row(
+        self,
+        parent_layout: QVBoxLayout,
+        parent: QWidget,
+        features: list[dict[str, Any]],
+        tags: list[dict[str, Any]],
+    ) -> None:
+        row = QHBoxLayout()
+        row.setSpacing(16)
+
+        feature_title = QLabel(tr("pets.feature"), parent)
+        feature_title.setObjectName("cardSubTitle")
+        row.addWidget(feature_title)
+
+        feature_trigger = Tag(
+            self._feature_filter_text(features),
+            parent=parent,
+            tag_id="feature_filter",
+        )
+        feature_trigger.set_selected(self._feature_id is not None)
+        feature_trigger.set_tooltip(tr("common.filters"))
+        self._feature_popup.set_content_widget(self._build_feature_popup_content(features))
+        self._feature_popup.bind_toggle(feature_trigger)
+        row.addWidget(feature_trigger)
+
+        tag_title = QLabel(tr("pets.detail.tags"), parent)
+        tag_title.setObjectName("cardSubTitle")
+        row.addWidget(tag_title)
+
+        tag_trigger = Tag(
+            self._tag_filter_text(tags),
+            parent=parent,
+            tag_id="tag_filter",
+        )
+        tag_trigger.set_selected(self._tag_id is not None)
+        tag_trigger.set_tooltip(tr("common.filters"))
+        self._tag_popup.set_content_widget(self._build_tag_popup_content(tags))
+        self._tag_popup.bind_toggle(tag_trigger)
+        row.addWidget(tag_trigger)
+
         row.addStretch(1)
         parent_layout.addLayout(row)
 
@@ -175,6 +228,74 @@ class PetsView(BasePageView):
         layout.addLayout(grid)
         return content
 
+    def _add_tag_row(
+        self,
+        parent_layout: QVBoxLayout,
+        parent: QWidget,
+        tags: list[dict[str, Any]],
+    ) -> None:
+        row = QHBoxLayout()
+        row.setSpacing(8)
+        title = QLabel(tr("pets.detail.tags"), parent)
+        title.setObjectName("cardSubTitle")
+        row.addWidget(title)
+
+        trigger = Tag(self._tag_filter_text(tags), parent=parent, tag_id="tag_filter")
+        trigger.set_selected(self._tag_id is not None)
+        trigger.set_tooltip(tr("common.filters"))
+        self._tag_popup.set_content_widget(self._build_tag_popup_content(tags))
+        self._tag_popup.bind_toggle(trigger)
+        row.addWidget(trigger)
+        row.addStretch(1)
+        parent_layout.addLayout(row)
+
+    def _build_tag_popup_content(self, tags: list[dict[str, Any]]) -> QWidget:
+        content = QWidget()
+        content.setStyleSheet("background: transparent;")
+
+        layout = QVBoxLayout(content)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+
+        title = QLabel(tr("common.filters"), content)
+        title.setObjectName("resourceTitle")
+        layout.addWidget(title)
+
+        desc = QLabel(tr("pets.detail.tags"), content)
+        desc.setObjectName("metaText")
+        layout.addWidget(desc)
+
+        grid = QGridLayout()
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setHorizontalSpacing(8)
+        grid.setVerticalSpacing(8)
+
+        all_tag = Tag(tr("common.all"), parent=content, tag_id="all")
+        all_tag.set_selected(self._tag_id is None)
+        all_tag.tag_clicked.connect(lambda _tag_id: self._select_tag_from_popup(None))
+        grid.addWidget(all_tag, 0, 0)
+
+        for index, raw_tag in enumerate(tags, start=1):
+            tag_id = raw_tag.get("id")
+            if not isinstance(tag_id, int):
+                continue
+            label = first_text(raw_tag, "name", default=tr("pets.detail.tags"))
+            color = first_text(raw_tag, "color", default="")
+            tag = Tag(
+                label[:14],
+                parent=content,
+                background_color=color,
+                tag_id=str(tag_id),
+            )
+            tag.set_selected(self._tag_id == tag_id)
+            tag.tag_clicked.connect(
+                lambda _tag_id, current_id=tag_id: self._select_tag_from_popup(current_id)
+            )
+            grid.addWidget(tag, index // 3, index % 3)
+
+        layout.addLayout(grid)
+        return content
+
     def _feature_filter_text(self, features: list[dict[str, Any]]) -> str:
         if self._feature_id is None:
             return tr("common.filters")
@@ -187,6 +308,37 @@ class PetsView(BasePageView):
         self._feature_popup.hide()
         self._set_feature(feature_id)
 
+    def _select_tag_from_popup(self, tag_id: int | None) -> None:
+        self._tag_popup.hide()
+        self._set_tag(tag_id)
+
+    def _remember_tag_options(self, pets: list[dict[str, Any]]) -> None:
+        for pet in pets:
+            for raw_tag in extract_list(pet.get("tags")):
+                if not isinstance(raw_tag, dict):
+                    continue
+                tag_id = raw_tag.get("id")
+                if not isinstance(tag_id, int):
+                    continue
+                self._tag_options[tag_id] = raw_tag
+
+    def _current_tag_options(self) -> list[dict[str, Any]]:
+        return sorted(
+            self._tag_options.values(),
+            key=lambda item: (
+                first_text(item, "name", default=""),
+                str(item.get("id", "")),
+            ),
+        )
+
+    def _tag_filter_text(self, tags: list[dict[str, Any]]) -> str:
+        if self._tag_id is None:
+            return tr("common.filters")
+        for raw_tag in tags:
+            if raw_tag.get("id") == self._tag_id:
+                return first_text(raw_tag, "name", default=tr("common.filters"))[:14]
+        return tr("common.filters")
+
     def _build_pet_card(self, pet: dict[str, Any]) -> QWidget:
         card = PetCard(pet, parent=self.content_widget, image_size=40, clickable=True)
         card.clicked.connect(self._open_detail)
@@ -194,6 +346,11 @@ class PetsView(BasePageView):
 
     def _set_feature(self, feature_id: int | None) -> None:
         self._feature_id = feature_id
+        self._current_page = 1
+        self.refresh()
+
+    def _set_tag(self, tag_id: int | None) -> None:
+        self._tag_id = tag_id
         self._current_page = 1
         self.refresh()
 

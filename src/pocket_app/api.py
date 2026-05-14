@@ -346,6 +346,7 @@ async def admin_register(email: str, password: str, password_confirm: str) -> An
 async def list_pets(
     generation_id: int | None = None,
     feature_id: int | None = None,
+    tag_id: int | None = None,
     name: str = "",
     page: int | None = None,
     page_size: int | None = None,
@@ -355,6 +356,7 @@ async def list_pets(
         params={
             "generation_id": generation_id,
             "feature_id": feature_id,
+            "tag_id": tag_id,
             "name": name,
             "page": page,
             "page_size": page_size,
