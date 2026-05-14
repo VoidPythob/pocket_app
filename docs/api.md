@@ -295,6 +295,28 @@
 - 该接口返回文件流，不使用 `Result` JSON 包装
 - 文件不存在时返回 `404`
 
+### 4.21 标签列表
+
+- 方法：`GET`
+- 路径：`/tags/`
+- 权限：公开查询
+
+请求参数：
+
+- `page`：页码，可选
+- `page_size`：每页条数，可选，最大 `100`
+
+说明：
+
+- 分页返回包含：`count`、`total_pages`、`next`、`previous`、`results`
+- 列表项返回：`id`、`name`、`color`
+
+### 4.22 标签详情
+
+- 方法：`GET`
+- 路径：`/tags/{id}/`
+- 权限：公开查询
+
 ## 5. 管理员宠物相关接口
 
 ### 5.1 创建宠物
@@ -645,6 +667,8 @@
 - `GET /items/{id}/`
 - `GET /generations/`
 - `GET /generations/{id}/`
+- `GET /tags/`
+- `GET /tags/{id}/`
 - `GET /egg-groups/`
 - `GET /egg-groups/{id}/`
 - `GET /egg-groups/{id}/pets/`

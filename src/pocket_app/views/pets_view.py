@@ -39,7 +39,6 @@ class PetsView(BasePageView):
         self._tag_popup = PopupPanel(offset_y=10, match_anchor_width=True)
         self._current_page = 1
         self._total_pages = 1
-        self._tag_options: dict[int, dict[str, Any]] = {}
 
     def reset_filters(self) -> None:
         self._feature_id = None
@@ -59,7 +58,6 @@ class PetsView(BasePageView):
             self._detail_pet_id = None
             self._tag_id = None
             self._current_page = 1
-            self._tag_options.clear()
         return changed
 
     def set_search_text(self, text: str) -> None:
@@ -75,10 +73,12 @@ class PetsView(BasePageView):
         if self._generation_id is None:
             return {
                 "features": await api.list_features(page=1),
+                "tags": await api.list_tags(),
                 "pets": {"results": [], "count": 0},
             }
-        features, pets = await asyncio.gather(
+        features, tags, pets = await asyncio.gather(
             api.list_features(page=1),
+            api.list_tags(),
             api.list_pets(
                 generation_id=self._generation_id,
                 feature_id=self._feature_id,
@@ -88,7 +88,7 @@ class PetsView(BasePageView):
                 page_size=LIST_PAGE_SIZE,
             ),
         )
-        return {"features": features, "pets": pets}
+        return {"features": features, "tags": tags, "pets": pets}
 
     def render_data(self, data: dict[str, Any]) -> None:
         self._feature_popup.hide()
@@ -99,10 +99,9 @@ class PetsView(BasePageView):
             return
 
         features = extract_list(data["features"])
+        tags = extract_list(data.get("tags", []))
         pets_payload = data["pets"]
         pets = extract_list(pets_payload)
-        self._remember_tag_options(pets)
-        tags = self._current_tag_options()
         self._update_paging(pets_payload)
 
         filter_panel, filter_layout = self.build_panel("pageCard")
@@ -311,25 +310,6 @@ class PetsView(BasePageView):
     def _select_tag_from_popup(self, tag_id: int | None) -> None:
         self._tag_popup.hide()
         self._set_tag(tag_id)
-
-    def _remember_tag_options(self, pets: list[dict[str, Any]]) -> None:
-        for pet in pets:
-            for raw_tag in extract_list(pet.get("tags")):
-                if not isinstance(raw_tag, dict):
-                    continue
-                tag_id = raw_tag.get("id")
-                if not isinstance(tag_id, int):
-                    continue
-                self._tag_options[tag_id] = raw_tag
-
-    def _current_tag_options(self) -> list[dict[str, Any]]:
-        return sorted(
-            self._tag_options.values(),
-            key=lambda item: (
-                first_text(item, "name", default=""),
-                str(item.get("id", "")),
-            ),
-        )
 
     def _tag_filter_text(self, tags: list[dict[str, Any]]) -> str:
         if self._tag_id is None:

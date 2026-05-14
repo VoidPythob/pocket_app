@@ -480,6 +480,10 @@ async def list_egg_groups() -> Any:
     return await _get("/egg-groups/")
 
 
+async def list_tags() -> Any:
+    return await _get("/tags/")
+
+
 async def list_generations(
     page: int | None = None,
     page_size: int | None = None,
