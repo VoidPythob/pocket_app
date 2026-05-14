@@ -130,8 +130,7 @@ class EggGroupsView(BasePageView):
         count = first_page.get("count") if isinstance(first_page, dict) else None
         all_rows = list(rows)
         if isinstance(count, int) and rows:
-            page_size = len(rows)
-            total_pages = max(1, (count + page_size - 1) // page_size)
+            total_pages = max(1, (count + LIST_PAGE_SIZE - 1) // LIST_PAGE_SIZE)
             if total_pages > 1:
                 payloads = await asyncio.gather(
                     *(

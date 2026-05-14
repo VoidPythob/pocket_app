@@ -352,15 +352,18 @@ class MainWindowCentralWidget(QWidget):
         )
 
     async def _fetch_item_routes(self):
-        first_page = await api.list_items(page=1)
+        route_page_size = 100
+        first_page = await api.list_items(page=1, page_size=route_page_size)
         rows = extract_list(first_page)
         count = first_page.get("count") if isinstance(first_page, dict) else None
         if isinstance(count, int) and rows:
-            page_size = len(rows)
-            total_pages = (count + page_size - 1) // page_size
+            total_pages = (count + route_page_size - 1) // route_page_size
             if total_pages > 1:
                 other_pages = await asyncio.gather(
-                    *(api.list_items(page=page) for page in range(2, total_pages + 1))
+                    *(
+                        api.list_items(page=page, page_size=route_page_size)
+                        for page in range(2, total_pages + 1)
+                    )
                 )
                 all_rows = list(rows)
                 for payload in other_pages:

@@ -10,6 +10,8 @@ def collect_resources(src_dir, dst_dir):
     datas = []
     for root, dirs, files in os.walk(src_dir):
         for file in files:
+            if file in {"config-dev.json", "config-release.json"}:
+                continue
             src_path = os.path.join(root, file)
             rel_path = os.path.relpath(root, src_dir)
             if rel_path == ".":

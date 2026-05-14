@@ -88,6 +88,8 @@ def _resolve_resource_config_path() -> Path | None:
         meipass = getattr(sys, "_MEIPASS", "")
         if meipass:
             candidates.append(Path(meipass).resolve() / "resources" / "config.json")
+    else:
+        candidates.append(Path(__file__).resolve().parents[2] / "resources" / "config-dev.json")
 
     candidates.append(Path(__file__).resolve().parents[2] / "resources" / "config.json")
 
