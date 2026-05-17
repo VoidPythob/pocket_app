@@ -42,6 +42,8 @@
   "common.gender_man": "man ",
   "common.pet": "bister",
   "common.unknown": "unknown",
+  "pagination.previous": "previous page",
+  "pagination.next": "next page",
   "detail.back": "coall list",
   "detail.summary": "summary",
   "detail.basic_info": "basic info",

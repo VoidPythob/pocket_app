@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidg
 
 from pocket_app import api
 from pocket_app.components import PaginationBar, PetCard, PopupPanel, SearchBar, Tag
-from pocket_app.resources import tr
+from pocket_app.resources import I18nManager, tr
 
 from .detail import render_pet_detail
 from .view_helpers import (
@@ -57,6 +57,7 @@ class PetsView(BasePageView):
         self._feature_popup_pagination: PaginationBar | None = None
         self._current_page = 1
         self._total_pages = 1
+        I18nManager.language_changed.connect(self._on_language_changed)
 
     def reset_filters(self) -> None:
         self._feature_id = None
@@ -294,6 +295,14 @@ class PetsView(BasePageView):
         self._feature_popup_body_layout = body_layout
         self._feature_popup_pagination = pagination
         self._feature_popup.set_content_widget(content)
+
+    def _reset_feature_popup_content(self) -> None:
+        self._feature_popup.set_content_widget(None)
+        self._feature_popup_content = None
+        self._feature_popup_search_bar = None
+        self._feature_popup_all_tag = None
+        self._feature_popup_body_layout = None
+        self._feature_popup_pagination = None
 
     def _refresh_feature_popup_content(
         self,
@@ -563,3 +572,12 @@ class PetsView(BasePageView):
     def _close_detail(self) -> None:
         self._detail_pet_id = None
         self.refresh()
+
+    def _on_language_changed(self, _locale: str) -> None:
+        self._feature_popup.hide_immediately()
+        self._reset_feature_popup_content()
+        self._ensure_feature_popup_content()
+        self._refresh_feature_popup_content(
+            extract_list(self._feature_popup_payload),
+            "" if self._feature_popup_loaded else tr("loading.desc"),
+        )

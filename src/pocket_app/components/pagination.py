@@ -3,7 +3,7 @@ from __future__ import annotations
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QWidget
 
-from pocket_app.resources import Icons, Qss, ThemeManager, load_qss
+from pocket_app.resources import I18nManager, Icons, Qss, ThemeManager, load_qss, tr
 
 from .icon_button import IconButton
 
@@ -24,6 +24,7 @@ class PaginationBar(QFrame):
         self._total_pages = max(1, total_pages)
         self._max_visible = max(5, max_visible)
         ThemeManager.theme_changed.connect(self._on_theme_changed)
+        I18nManager.language_changed.connect(self._on_language_changed)
         self._setup_ui()
         self._refresh()
 
@@ -39,7 +40,7 @@ class PaginationBar(QFrame):
         self._prev_button = IconButton(
             Icons.back_arrow,
             parent=self,
-            tooltip="Previous page",
+            tooltip=tr("pagination.previous"),
             button_size=32,
             icon_size=16,
         )
@@ -55,7 +56,7 @@ class PaginationBar(QFrame):
         self._next_button = IconButton(
             Icons.fold_chevron,
             parent=self,
-            tooltip="Next page",
+            tooltip=tr("pagination.next"),
             button_size=32,
             icon_size=16,
         )
@@ -100,6 +101,8 @@ class PaginationBar(QFrame):
     def _refresh(self) -> None:
         self._prev_button.setEnabled(self._current_page > 1)
         self._next_button.setEnabled(self._current_page < self._total_pages)
+        self._prev_button.setToolTip(tr("pagination.previous"))
+        self._next_button.setToolTip(tr("pagination.next"))
         self._info_label.setText(f"{self._current_page} / {self._total_pages}")
         self._rebuild_page_buttons()
 
@@ -161,6 +164,9 @@ class PaginationBar(QFrame):
 
     def _on_theme_changed(self, _theme: str) -> None:
         self._apply_style()
+
+    def _on_language_changed(self, _locale: str) -> None:
+        self._refresh()
 
 
 def create_pagination(

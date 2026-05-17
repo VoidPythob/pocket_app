@@ -42,6 +42,8 @@
   "common.gender_man": "雄 ",
   "common.pet": "ペット",
   "common.unknown": "不明",
+  "pagination.previous": "前のページ",
+  "pagination.next": "次のページ",
   "detail.back": "一覧に戻る",
   "detail.summary": "概要",
   "detail.basic_info": "基本情報",

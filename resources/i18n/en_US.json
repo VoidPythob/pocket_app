@@ -42,6 +42,8 @@
   "common.gender_man": "Male ",
   "common.pet": "Pet",
   "common.unknown": "Unknown",
+  "pagination.previous": "Previous page",
+  "pagination.next": "Next page",
   "detail.back": "Back to list",
   "detail.summary": "Summary",
   "detail.basic_info": "Basic Info",
