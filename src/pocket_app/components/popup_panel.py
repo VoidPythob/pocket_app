@@ -104,7 +104,14 @@ class PopupPanel(QFrame):
         if widget is not None:
             widget.setParent(self)
             self._layout.addWidget(widget)
+            widget.adjustSize()
+            widget.updateGeometry()
+        self._layout.activate()
         self.adjustSize()
+        self.updateGeometry()
+        if self.isVisible():
+            if self._resolve_positions():
+                self.move(self._hidden_pos if self._is_hiding else self._final_pos)
 
     def content_widget(self) -> QWidget | None:
         return self._content_widget
@@ -112,21 +119,22 @@ class PopupPanel(QFrame):
     def set_offset(self, x: int, y: int) -> None:
         self._offset = QPoint(x, y)
         if self.isVisible():
-            self._resolve_positions()
-            self.move(self._hidden_pos if self._is_hiding else self._final_pos)
+            if self._resolve_positions():
+                self.move(self._hidden_pos if self._is_hiding else self._final_pos)
 
     def set_match_anchor_width(self, enabled: bool) -> None:
         self._match_anchor_width = enabled
         if self.isVisible():
-            self._resolve_positions()
-            self.move(self._hidden_pos if self._is_hiding else self._final_pos)
+            if self._resolve_positions():
+                self.move(self._hidden_pos if self._is_hiding else self._final_pos)
 
     def show_for(self, anchor: QWidget) -> None:
         if anchor is None:
             return
         self._bind_anchor(anchor)
         self.adjustSize()
-        self._resolve_positions()
+        if not self._resolve_positions():
+            return
         self._stop_animation()
         self._is_hiding = False
 
@@ -226,11 +234,11 @@ class PopupPanel(QFrame):
             event_type = event.type()
             if event_type in (QEvent.Type.Move, QEvent.Type.Resize):
                 if self.isVisible():
-                    self._resolve_positions()
-                    if self._is_hiding:
-                        self.move(self._hidden_pos)
-                    else:
-                        self.move(self._final_pos)
+                    if self._resolve_positions():
+                        if self._is_hiding:
+                            self.move(self._hidden_pos)
+                        else:
+                            self.move(self._final_pos)
             elif event_type in (
                 QEvent.Type.Hide,
                 QEvent.Type.Close,
@@ -295,7 +303,10 @@ class PopupPanel(QFrame):
         while current is not None:
             if current is self or current is self._anchor:
                 return True
-            current = current.parentWidget()
+            try:
+                current = current.parentWidget()
+            except RuntimeError:
+                return False
         return False
 
     def _should_hide_for_pointer_event(self, watched: QObject | None, event: QEvent) -> bool:
@@ -309,20 +320,32 @@ class PopupPanel(QFrame):
             if self.rect().contains(local_pos):
                 return False
             if self._anchor is not None:
-                anchor_rect = self._anchor.rect()
-                anchor_pos = self._anchor.mapFromGlobal(global_pos)
-                if anchor_rect.contains(anchor_pos):
-                    return False
+                try:
+                    anchor_rect = self._anchor.rect()
+                    anchor_pos = self._anchor.mapFromGlobal(global_pos)
+                    if anchor_rect.contains(anchor_pos):
+                        return False
+                except RuntimeError:
+                    self._unbind_anchor()
+                    return True
         return True
 
-    def _resolve_positions(self) -> None:
+    def _resolve_positions(self) -> bool:
         anchor = self._anchor
         host_widget = self._host_widget
         if anchor is None or host_widget is None:
-            return
+            return False
 
-        anchor_top_left = anchor.mapTo(host_widget, QPoint(0, 0))
-        anchor_bottom_left = anchor.mapTo(host_widget, anchor.rect().bottomLeft())
+        if not self._is_widget_alive(anchor) or not self._is_widget_alive(host_widget):
+            self._unbind_anchor()
+            return False
+
+        try:
+            anchor_top_left = anchor.mapTo(host_widget, QPoint(0, 0))
+            anchor_bottom_left = anchor.mapTo(host_widget, anchor.rect().bottomLeft())
+        except RuntimeError:
+            self._unbind_anchor()
+            return False
         self.adjustSize()
 
         width = self.sizeHint().width()
@@ -358,6 +381,17 @@ class PopupPanel(QFrame):
         self.resize(width, height)
         self._final_pos = final_pos
         self._hidden_pos = hidden_pos
+        return True
+
+    @staticmethod
+    def _is_widget_alive(widget: QWidget | None) -> bool:
+        if widget is None:
+            return False
+        try:
+            widget.objectName()
+        except RuntimeError:
+            return False
+        return True
 
     def _play_show_animation(self) -> None:
         self._opacity_anim.setStartValue(float(self._opacity_effect.opacity()))

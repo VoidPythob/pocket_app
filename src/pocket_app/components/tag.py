@@ -56,6 +56,9 @@ class Tag(QPushButton):
                 "selected_background_color": colors["selected_background"],
                 "selected_text_color": colors["selected_text"],
                 "selected_border_color": colors["selected_border"],
+                "tooltip_background_color": Qss.variables.get("panel_background", "#ffffff"),
+                "tooltip_text_color": Qss.variables.get("body_text_color", "#20324d"),
+                "tooltip_border_color": Qss.variables.get("panel_border", "#bccde0"),
             },
         )
         self.setStyleSheet(style)
